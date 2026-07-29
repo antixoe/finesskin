@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+**/node_modules/
+
+# next / angular / build output
+.next/
+**/.next/
+dist/
+**/dist/
+out/
+**/out/
+coverage/
+**/coverage/
+.generated/
+**/.angular/cache/
+
+# local env / secrets
+.env
+.env.*
+**/.env
+**/.env.*
+backend/.env*
+frontend/.env*
+
+# logs and OS junk
+*.log
+.DS_Store
+Thumbs.db
+
+# workspace metadata
+.agents/
