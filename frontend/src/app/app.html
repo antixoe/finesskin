@@ -35,7 +35,7 @@
         aria-label="Close auth modal"
         (click)="closeAuth()"
       >
-        ×
+        &times;
       </button>
 
       <p class="auth-modal__eyebrow">Account access</p>
@@ -78,6 +78,7 @@
             [(ngModel)]="authName"
             placeholder="Your name"
             autocomplete="name"
+            required
           />
         </label>
 
@@ -89,6 +90,7 @@
             [(ngModel)]="authEmail"
             placeholder="you@example.com"
             autocomplete="email"
+            required
           />
         </label>
 
@@ -99,9 +101,18 @@
             name="password"
             [(ngModel)]="authPassword"
             placeholder="Enter your password"
-            autocomplete="current-password"
+            [autocomplete]="authModal.mode() === 'signin' ? 'current-password' : 'new-password'"
+            required
           />
         </label>
+
+        <p class="auth-modal__feedback auth-modal__feedback--error" *ngIf="authError">
+          {{ authError }}
+        </p>
+
+        <p class="auth-modal__feedback auth-modal__feedback--success" *ngIf="authSuccess">
+          {{ authSuccess }}
+        </p>
 
         <button type="submit" class="auth-modal__submit">
           {{ authModal.mode() === 'signin' ? 'Sign In' : 'Create Account' }}

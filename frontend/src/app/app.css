@@ -103,6 +103,154 @@
   padding-block: 2rem 3rem;
 }
 
+.auth-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(10px);
+}
+
+.auth-modal {
+  width: min(100%, 30rem);
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(214, 235, 248, 0.98);
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 249, 255, 0.96));
+  box-shadow: 0 26px 80px rgba(15, 23, 42, 0.24);
+}
+
+.auth-modal__close {
+  justify-self: end;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.8);
+  color: #0f172a;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.auth-modal__eyebrow {
+  margin: 0;
+  color: #0b95dc;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.auth-modal__title,
+.auth-modal__copy,
+.auth-modal__feedback {
+  margin: 0;
+}
+
+.auth-modal__title {
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.auth-modal__copy {
+  color: #5d7186;
+  line-height: 1.7;
+}
+
+.auth-modal__switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.auth-modal__switch-btn,
+.auth-modal__submit {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.auth-modal__switch-btn {
+  background: rgba(226, 232, 240, 0.7);
+  color: #475569;
+}
+
+.auth-modal__switch-btn.is-active {
+  background: linear-gradient(135deg, #0f172a, #139ce7);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(19, 156, 231, 0.18);
+}
+
+.auth-modal__form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-modal__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.auth-modal__field span {
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.auth-modal__field input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 1rem;
+  background: #ffffff;
+  outline: none;
+}
+
+.auth-modal__field input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.24);
+}
+
+.auth-modal__feedback {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.auth-modal__feedback--error {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.auth-modal__feedback--success {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.auth-modal__submit {
+  background: linear-gradient(135deg, #18a9f7, #7bd7ff);
+  color: #ffffff;
+  box-shadow: 0 18px 34px rgba(24, 169, 247, 0.24);
+}
+
+.auth-modal__switch-btn:hover,
+.auth-modal__submit:hover,
+.auth-modal__close:hover {
+  transform: translateY(-1px);
+}
+
 @media (max-width: 900px) {
   .site-header__inner {
     flex-wrap: wrap;
@@ -123,5 +271,14 @@
   .site-nav {
     overflow-x: auto;
     justify-content: flex-start;
+  }
+
+  .auth-modal-backdrop {
+    padding: 0.85rem;
+  }
+
+  .auth-modal {
+    padding: 1.2rem;
+    border-radius: 1.35rem;
   }
 }
