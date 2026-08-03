@@ -1,0 +1,127 @@
+.app-shell {
+  min-height: 100vh;
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(247, 251, 255, 0.82);
+  backdrop-filter: blur(16px);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #0ea5e9, #67e8f9);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  box-shadow: 0 16px 36px rgba(14, 165, 233, 0.24);
+}
+
+.brand__eyebrow,
+.brand__label {
+  display: block;
+}
+
+.brand__eyebrow {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.brand__label {
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.site-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: rgba(240, 249, 255, 0.82);
+}
+
+.site-nav a {
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  color: #475569;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease,
+    transform 160ms ease;
+}
+
+.site-nav a:hover,
+.site-nav a.is-active {
+  background: #fff;
+  color: #0369a1;
+  transform: translateY(-1px);
+}
+
+.profile-pill {
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.85rem 1rem;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 600;
+  box-shadow: 0 8px 22px rgba(148, 163, 184, 0.12);
+}
+
+.app-main {
+  padding-block: 2rem 3rem;
+}
+
+@media (max-width: 900px) {
+  .site-header__inner {
+    flex-wrap: wrap;
+  }
+
+  .site-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .profile-pill {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-nav {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+}

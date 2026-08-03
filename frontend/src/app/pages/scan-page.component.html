@@ -1,0 +1,147 @@
+<section class="panel section-intro">
+  <p class="section-label">AI scan studio</p>
+  <h1 class="headline-lg">Upload a photo or use webcam capture</h1>
+  <p class="lead-copy">
+    Simulate a scan, review structured hydration and sensitivity metrics, and
+    save the result into the backend scan history.
+  </p>
+</section>
+
+<section class="dashboard-grid">
+  <article class="panel">
+    <div class="panel-header">
+      <div>
+        <p class="section-label">AI Skin Analysis</p>
+        <h2 class="section-title">Upload, capture, or simulate a scan</h2>
+      </div>
+      <div class="status-pill">Demo analysis engine</div>
+    </div>
+
+    <div class="analysis-grid">
+      <div class="stack-md">
+        <div class="upload-card">
+          <div class="card-title">Upload or webcam capture</div>
+          <label class="upload-dropzone">
+            <input
+              type="file"
+              accept="image/*"
+              [attr.capture]="source() === 'CAMERA' ? 'environment' : null"
+              (change)="onFileSelected($event)"
+            />
+            <div class="upload-dropzone__icon">CAM</div>
+            <p class="card-title">{{ imageLabel() }}</p>
+            <p class="card-copy">Drop a skin photo or use camera capture mode.</p>
+          </label>
+        </div>
+
+        <div class="two-col">
+          <button
+            type="button"
+            class="toggle-card"
+            *ngFor="let option of scanSourceOptions"
+            [class.toggle-card--active]="source() === option"
+            (click)="source.set(option)"
+          >
+            <div class="card-title">{{ sourceLabel[option] }}</div>
+            <div class="card-copy">
+              {{ option === 'UPLOAD' ? 'Use an existing skin photo.' : 'Capture live with the device camera.' }}
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div class="stack-md">
+        <div class="two-col">
+          <label class="metric-card metric-card--slider" *ngFor="let metric of skinMetricCards">
+            <div class="slider-row">
+              <span>{{ metric.label }}</span>
+              <strong>{{ analysis()[metric.key] }}</strong>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              [ngModel]="analysis()[metric.key]"
+              (ngModelChange)="metric.key === 'hydration' ? hydration.set($event) : metric.key === 'redness' ? redness.set($event) : metric.key === 'acne' ? acne.set($event) : barrier.set($event)"
+            />
+          </label>
+        </div>
+
+        <div class="dark-card">
+          <div class="snapshot-row">
+            <div>
+              <p class="section-label section-label--dark">AI result</p>
+              <div class="hero-score">
+                {{ analysis().score }}<span>/100</span>
+              </div>
+            </div>
+            <button type="button" class="btn btn--accent" [disabled]="pending()" (click)="saveScan()">
+              {{ pending() ? 'Saving...' : 'Run AI Analysis' }}
+            </button>
+          </div>
+          <p class="dark-copy">{{ analysis().summary }}</p>
+
+          <div class="two-col">
+            <div class="metric-card metric-card--dark" *ngFor="let metric of skinMetricCards">
+              <div class="muted-sm muted-sm--dark">{{ metric.label }}</div>
+              <div class="metric-value metric-value--dark">{{ analysis()[metric.key] }}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <aside class="stack-md">
+    <section class="panel">
+      <p class="section-label">Recommendations</p>
+      <h3 class="section-title section-title--sm">Personalized skincare guidance</h3>
+      <div class="stack-sm recommendations">
+        <article class="recommendation-card" *ngFor="let item of analysis().recommendations">
+          <div class="recommendation-card__header">
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.priority }}</span>
+          </div>
+          <p>{{ item.detail }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="section-label">Product match</p>
+      <h3 class="section-title section-title--sm">Connected product bank</h3>
+      <div class="tag-row" *ngIf="products().length; else noProducts">
+        <span class="tag-pill" *ngFor="let product of products()">
+          {{ product.name }} | {{ product.category }}
+        </span>
+      </div>
+      <ng-template #noProducts>
+        <p class="card-copy">Add products in the routine manager to connect them here.</p>
+      </ng-template>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="section-label">Scan history</p>
+          <h3 class="section-title section-title--sm">Recent analysis runs</h3>
+        </div>
+      </div>
+
+      <div class="stack-sm">
+        <article class="metric-card" *ngFor="let scan of scans()">
+          <div class="snapshot-card__row">
+            <div>
+              <div class="card-title">{{ scan.imageLabel || 'Skin scan' }}</div>
+              <div class="muted-sm">
+                {{ sourceLabel[scan.source] }} | {{ scan.createdAt | date: 'medium' }}
+              </div>
+            </div>
+            <span class="status-pill">{{ scan.score }}/100</span>
+          </div>
+          <p class="card-copy">{{ scan.summary }}</p>
+        </article>
+      </div>
+    </section>
+  </aside>
+</section>

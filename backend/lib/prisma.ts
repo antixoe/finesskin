@@ -1,5 +1,6 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -13,13 +14,19 @@ declare global {
   var __finesskinPrisma: PrismaClient | undefined;
 }
 
-const adapter = new PrismaPg({ connectionString });
+const isPostgres = connectionString.startsWith("postgresql://");
 
 const prisma =
   globalThis.__finesskinPrisma ??
-  new PrismaClient({
-    adapter,
-  });
+  (isPostgres
+    ? new PrismaClient({
+        adapter: new PrismaPg({ connectionString }),
+      })
+    : new PrismaClient({
+        adapter: new PrismaBetterSqlite3({
+          url: connectionString,
+        }),
+      }));
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.__finesskinPrisma = prisma;

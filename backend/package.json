@@ -9,10 +9,13 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
+    "db:generate:postgres": "prisma generate --schema prisma/schema.postgres.prisma",
     "db:push": "prisma db push",
+    "db:push:postgres": "prisma db push --schema prisma/schema.postgres.prisma",
     "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.9.1",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "@types/pg": "^8.20.0",

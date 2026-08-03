@@ -1,24 +1,51 @@
 # Backend
 
-Next.js app wired to a Dockerized Postgres database.
+Next.js app with Prisma. Local laptop development now defaults to SQLite so you can run it without Docker or a separate database server.
 
-## Setup
+## Local setup without Docker
 
-1. Start the database:
+1. Use the default local env:
 
-```bash
-docker compose -f docker.compose.yml up -d db
+```text
+DATABASE_URL="file:./prisma/dev.db"
 ```
 
-2. Create `backend/.env.local` from `backend/.env.local.example`.
+2. Install dependencies:
 
-3. Run the app:
+```bash
+npm install
+```
+
+3. Create the schema and seed demo data:
+
+```bash
+npm run db:push
+npm run db:seed
+```
+
+4. Run the app:
 
 ```bash
 npm run dev
 ```
 
+## PostgreSQL mode
+
+If you want the original PostgreSQL setup again, use a Postgres URL in `backend/.env.local` and regenerate the Prisma client for the Postgres schema before pushing:
+
+```bash
+npm run db:generate:postgres
+npm run db:push:postgres
+npm run db:seed
+```
+
+Example connection string:
+
+```text
+DATABASE_URL="postgresql://app_user:app_password@localhost:5432/finesskin"
+```
+
 ## Verify
 
-- Open `http://localhost:3000` to see the connection status.
+- Open `http://localhost:3000` to see the dashboard.
 - Open `http://localhost:3000/api/db` to check the JSON health response.

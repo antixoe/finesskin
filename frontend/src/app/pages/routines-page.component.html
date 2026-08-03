@@ -1,0 +1,182 @@
+<section class="panel section-intro">
+  <p class="section-label">Routine management</p>
+  <h1 class="headline-lg">AM and PM care you can track daily</h1>
+  <p class="lead-copy">
+    Build skincare rituals, toggle habits, edit product assignments, and store
+    progress in the backend with every action.
+  </p>
+</section>
+
+<section class="dashboard-grid">
+  <section class="stack-md">
+    <div class="panel">
+      <p class="section-label">Routine management</p>
+      <h2 class="section-title">AM / PM care with streak tracking</h2>
+      <p class="card-copy">
+        Toggle completion, add products, and keep the routine organized by time
+        of day.
+      </p>
+
+      <div class="three-col">
+        <div class="metric-card">
+          <div class="muted-sm">Active routines</div>
+          <div class="big-number">{{ routines().length }}</div>
+        </div>
+        <div class="metric-card">
+          <div class="muted-sm">Completions logged</div>
+          <div class="big-number">{{ totalCompletions() }}</div>
+        </div>
+        <div class="metric-card">
+          <div class="muted-sm">Products in bank</div>
+          <div class="big-number">{{ products().length }}</div>
+        </div>
+      </div>
+    </div>
+
+    <article class="panel" *ngFor="let routine of routines()">
+      <div class="panel-header">
+        <div>
+          <div class="status-pill">{{ routineTimingLabel[routine.timing] }}</div>
+          <h3 class="section-title">{{ routine.name }}</h3>
+          <p class="card-copy">{{ routine.notes }}</p>
+        </div>
+        <button
+          type="button"
+          class="btn"
+          [class.btn--success]="routine.completedToday"
+          [class.btn--primary]="!routine.completedToday"
+          (click)="toggleRoutine(routine)"
+        >
+          {{ routine.completedToday ? 'Completed' : 'Mark complete' }}
+        </button>
+      </div>
+
+      <div class="stack-sm">
+        <button
+          type="button"
+          class="check-card"
+          *ngFor="let item of routine.items"
+          (click)="toggleItem(routine.id, item.id, item.isChecked)"
+        >
+          <span class="check-indicator" [class.check-indicator--done]="item.isChecked">
+            {{ item.isChecked ? 'OK' : 'GO' }}
+          </span>
+          <span class="check-copy">
+            <span class="card-title">{{ item.title }}</span>
+            <span class="tag-pill" *ngIf="item.product">{{ item.product.name }}</span>
+            <span class="card-copy" *ngIf="item.hint">{{ item.hint }}</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="tag-row">
+        <span class="tag-pill">Streak {{ routine.streak }} days</span>
+        <span class="card-copy">{{ routine.completions.length }} completion logs</span>
+      </div>
+    </article>
+  </section>
+
+  <aside class="stack-md">
+    <section class="panel">
+      <p class="section-label">Products</p>
+      <h3 class="section-title section-title--sm">Product compatibility bank</h3>
+      <p class="card-copy">
+        Add, edit, or remove products and assign them to AM or PM care.
+      </p>
+
+      <div class="form-grid">
+        <label class="field">
+          <span>Name</span>
+          <input
+            [ngModel]="productForm().name"
+            (ngModelChange)="updateProductForm('name', $event)"
+            placeholder="Hydra gel cleanser"
+          />
+        </label>
+
+        <label class="field">
+          <span>Brand</span>
+          <input
+            [ngModel]="productForm().brand"
+            (ngModelChange)="updateProductForm('brand', $event)"
+            placeholder="Finesskin Lab"
+          />
+        </label>
+      </div>
+
+      <div class="form-grid">
+        <label class="field">
+          <span>Category</span>
+          <select
+            [ngModel]="productForm().category"
+            (ngModelChange)="updateProductForm('category', $event)"
+          >
+            <option *ngFor="let option of productCategoryOptions" [value]="option">
+              {{ productCategoryLabel[option] }}
+            </option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Timing</span>
+          <select
+            [ngModel]="productForm().timing"
+            (ngModelChange)="updateProductForm('timing', $event)"
+          >
+            <option *ngFor="let option of routineTimingOptions" [value]="option">
+              {{ routineTimingLabel[option] }}
+            </option>
+          </select>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Notes</span>
+        <textarea
+          rows="4"
+          [ngModel]="productForm().notes"
+          (ngModelChange)="updateProductForm('notes', $event)"
+          placeholder="Describe how the product fits the routine."
+        ></textarea>
+      </label>
+
+      <div class="button-row">
+        <button type="button" class="btn btn--primary" [disabled]="saving()" (click)="saveProduct()">
+          {{ editingProductId() ? 'Update product' : 'Add product' }}
+        </button>
+        <button
+          *ngIf="editingProductId()"
+          type="button"
+          class="btn btn--secondary"
+          (click)="resetProductForm()"
+        >
+          New product
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="section-label">Inventory</p>
+      <h3 class="section-title section-title--sm">Current product list</h3>
+      <div class="stack-sm">
+        <article class="metric-card" *ngFor="let product of products()">
+          <div class="snapshot-card__row">
+            <div>
+              <div class="card-title">{{ product.name }}</div>
+              <div class="card-copy">
+                {{ productCategoryLabel[product.category] }} |
+                {{ routineTimingLabel[product.timing] }} |
+                {{ product.brand || 'No brand' }}
+              </div>
+            </div>
+            <div class="button-row button-row--tight">
+              <button type="button" class="btn btn--ghost" (click)="editProduct(product)">Edit</button>
+              <button type="button" class="btn btn--danger" (click)="deleteProduct(product.id)">Delete</button>
+            </div>
+          </div>
+          <p class="card-copy" *ngIf="product.notes">{{ product.notes }}</p>
+        </article>
+      </div>
+    </section>
+  </aside>
+</section>

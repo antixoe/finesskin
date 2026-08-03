@@ -21,6 +21,8 @@ coverage/
 **/.env.*
 backend/.env*
 frontend/.env*
+backend/prisma/*.db
+backend/prisma/*.db-*
 
 # logs and OS junk
 *.log
