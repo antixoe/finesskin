@@ -1,6 +1,6 @@
 <section class="panel section-intro">
   <p class="section-label">AI scan studio</p>
-  <h1 class="headline-lg" *ngIf="authService.user() as user">Hi, {{ user.name }} 👋</h1>
+  <h1 class="headline-lg" *ngIf="authService.user() as user">Hi, {{ user.name }}</h1>
   <h1 class="headline-lg" *ngIf="!authService.user()">Upload a photo or use webcam capture</h1>
   <p class="lead-copy">
     Simulate a scan, review structured hydration and sensitivity metrics, and

@@ -3,7 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { AdminApiService } from '../core/admin-api.service';
 import { NotificationService } from '../core/notification.service';
 import { sourceLabel } from '../core/finesskin.constants';
-import type { AdminScan } from '../core/finesskin.models';
+import type { AdminScan, ScanSource } from '../core/finesskin.models';
 
 @Component({
   selector: 'app-admin-scans',
@@ -57,5 +57,7 @@ export class AdminScansComponent implements OnInit {
     });
   }
 
-  protected readonly sourceLabel = sourceLabel;
+  protected sourceLabel(source: ScanSource): string {
+    return sourceLabel[source];
+  }
 }

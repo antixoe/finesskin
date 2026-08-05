@@ -1,11 +1,11 @@
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { DEFAULT_ADMIN_PERMISSIONS, logActivity, parsePermissions, requireAnyAdmin, serializePermissions } from "@/lib/admin";
 import { hashPassword } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAnyAdmin(request, ["USERS", "ROLES"]);
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
       name: true,
       email: true,
       role: true,
+      permissions: true,
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
@@ -27,11 +28,16 @@ export async function GET(request: Request) {
     },
   });
 
-  return Response.json({ users });
+  return Response.json({
+    users: users.map((user) => ({
+      ...user,
+      permissions: parsePermissions(user.permissions),
+    })),
+  });
 }
 
 export async function POST(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAnyAdmin(request, ["USERS", "ROLES"]);
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -42,12 +48,18 @@ export async function POST(request: Request) {
     email?: string;
     password?: string;
     role?: string;
+    permissions?: string[];
   };
 
   const name = body.name?.trim() ?? "";
   const email = body.email?.trim().toLowerCase() ?? "";
   const password = body.password ?? "";
-  const role = body.role === "ADMIN" ? "ADMIN" : "CUSTOMER";
+  const role =
+    body.role === "SUPER_ADMIN" && admin.role === "SUPER_ADMIN"
+      ? "SUPER_ADMIN"
+      : body.role === "ADMIN"
+        ? "ADMIN"
+        : "CUSTOMER";
 
   if (!name || !email || !password) {
     return Response.json(
@@ -75,12 +87,17 @@ export async function POST(request: Request) {
       email,
       password: hashPassword(password),
       role,
+      permissions:
+        role === "ADMIN"
+          ? serializePermissions(body.permissions ?? DEFAULT_ADMIN_PERMISSIONS)
+          : "[]",
     },
     select: {
       id: true,
       name: true,
       email: true,
       role: true,
+      permissions: true,
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
@@ -90,5 +107,10 @@ export async function POST(request: Request) {
     },
   });
 
-  return Response.json({ user }, { status: 201 });
+  await logActivity(admin.sub, "CREATE_USER", `user:${user.id}`, `${user.email} created as ${user.role}.`);
+
+  return Response.json(
+    { user: { ...user, permissions: parsePermissions(user.permissions) } },
+    { status: 201 },
+  );
 }

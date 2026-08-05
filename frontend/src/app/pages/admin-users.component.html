@@ -13,7 +13,7 @@
       *ngIf="!showForm()"
       (click)="startCreate()"
     >
-      + Add user
+      Add user
     </button>
   </header>
 
@@ -66,7 +66,6 @@
           <tr>
             <th>User</th>
             <th>Role</th>
-            <th>Products</th>
             <th>Routines</th>
             <th>Scans</th>
             <th>Joined</th>
@@ -80,11 +79,14 @@
               <div class="admin-table__cell-sub">{{ user.email }}</div>
             </td>
             <td>
-              <span class="admin-badge" [class.admin-badge--admin]="user.role === 'ADMIN'" [class.admin-badge--customer]="user.role === 'CUSTOMER'">
+              <span
+                class="admin-badge"
+                [class.admin-badge--admin]="user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'"
+                [class.admin-badge--customer]="user.role === 'CUSTOMER'"
+              >
                 {{ roleLabel(user.role) }}
               </span>
             </td>
-            <td>{{ user._count.products }}</td>
             <td>{{ user._count.routines }}</td>
             <td>{{ user._count.scans }}</td>
             <td class="admin-table__cell-sub">{{ user.createdAt | date: 'mediumDate' }}</td>
@@ -100,12 +102,11 @@
             </td>
           </tr>
           <tr *ngIf="users().length === 0">
-            <td colspan="7" class="admin-table__empty">No users found.</td>
+            <td colspan="6" class="admin-table__empty">No users found.</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <p class="admin-loading" *ngIf="loading()">Loading users…</p>
+    <p class="admin-loading" *ngIf="loading()">Loading users...</p>
   </section>
-
 </div>

@@ -2,18 +2,20 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
+import { AuthService } from '../core/auth.service';
 import { NotificationService } from '../core/notification.service';
-import type { AdminUser, UserRole } from '../core/finesskin.models';
+import type { AdminPermission, AdminUser, UserRole } from '../core/finesskin.models';
 
 @Component({
-  selector: 'app-admin-users',
+  selector: 'app-admin-roles',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './admin-users.component.html',
+  templateUrl: './admin-roles.component.html',
   styleUrl: './admin-pages.css',
 })
-export class AdminUsersComponent implements OnInit {
+export class AdminRolesComponent implements OnInit {
   private readonly api = inject(AdminApiService);
+  protected readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
 
   protected readonly users = signal<AdminUser[]>([]);
@@ -27,12 +29,21 @@ export class AdminUsersComponent implements OnInit {
   protected formEmail = '';
   protected formPassword = '';
   protected formRole: UserRole = 'CUSTOMER';
+  protected formPermissions: AdminPermission[] = [];
+  protected readonly permissionOptions: Array<{ value: AdminPermission; label: string }> = [
+    { value: 'DASHBOARD', label: 'Dashboard overview' },
+    { value: 'USERS', label: 'Users management' },
+    { value: 'ROLES', label: 'Roles management' },
+    { value: 'ROUTINES', label: 'Routines management' },
+    { value: 'SCANS', label: 'Scans management' },
+    { value: 'SETTINGS', label: 'Settings management' },
+  ];
 
   ngOnInit() {
     this.refresh();
   }
 
-  protected refresh() {
+  protected refresh(): void {
     this.loading.set(true);
     this.api.getUsers().subscribe({
       next: (users) => {
@@ -41,7 +52,7 @@ export class AdminUsersComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.notifications.error('Could not load users');
+        this.notifications.error('Could not load role assignments');
       },
     });
   }
@@ -52,6 +63,7 @@ export class AdminUsersComponent implements OnInit {
     this.formEmail = '';
     this.formPassword = '';
     this.formRole = 'CUSTOMER';
+    this.formPermissions = [];
     this.formError.set('');
     this.showForm.set(true);
   }
@@ -62,6 +74,7 @@ export class AdminUsersComponent implements OnInit {
     this.formEmail = user.email;
     this.formPassword = '';
     this.formRole = user.role;
+    this.formPermissions = [...user.permissions];
     this.formError.set('');
     this.showForm.set(true);
   }
@@ -70,6 +83,19 @@ export class AdminUsersComponent implements OnInit {
     this.showForm.set(false);
     this.editingId.set(null);
     this.formError.set('');
+  }
+
+  protected togglePermission(permission: AdminPermission, checked: boolean): void {
+    if (checked) {
+      this.formPermissions = Array.from(new Set([...this.formPermissions, permission]));
+      return;
+    }
+
+    this.formPermissions = this.formPermissions.filter((item) => item !== permission);
+  }
+
+  protected hasFormPermission(permission: AdminPermission): boolean {
+    return this.formPermissions.includes(permission);
   }
 
   protected save(): void {
@@ -95,6 +121,7 @@ export class AdminUsersComponent implements OnInit {
           name,
           email,
           role: this.formRole,
+          permissions: this.formRole === 'ADMIN' ? this.formPermissions : [],
           ...(this.formPassword ? { password: this.formPassword } : {}),
         })
       : this.api.createUser({
@@ -102,6 +129,7 @@ export class AdminUsersComponent implements OnInit {
           email,
           password: this.formPassword,
           role: this.formRole,
+          permissions: this.formRole === 'ADMIN' ? this.formPermissions : [],
         });
 
     request.subscribe({
@@ -109,24 +137,21 @@ export class AdminUsersComponent implements OnInit {
         this.saving.set(false);
         this.showForm.set(false);
         this.editingId.set(null);
-        if (editing) {
-          this.notifications.success('User updated', `${name} has been updated.`);
-        } else {
-          this.notifications.success('User created', `${name} now has an account.`);
-        }
+        this.notifications.success(
+          editing ? 'Role updated' : 'Role assignment created',
+          `${name} is now ${this.roleLabel(this.formRole)}.`,
+        );
         this.refresh();
       },
       error: (error) => {
         this.saving.set(false);
-        this.formError.set(error?.error?.error ?? 'Unable to save user.');
+        this.formError.set(error?.error?.error ?? 'Unable to save role assignment.');
       },
     });
   }
 
-  protected deleteUser(user: AdminUser): void {
-    const ok = window.confirm(
-      `Delete ${user.name} (${user.email})? This removes their routines and scans too.`,
-    );
+  protected deleteAssignment(user: AdminUser): void {
+    const ok = window.confirm(`Delete ${user.name} (${user.email}) from role management?`);
 
     if (!ok) {
       return;
@@ -134,11 +159,11 @@ export class AdminUsersComponent implements OnInit {
 
     this.api.deleteUser(user.id).subscribe({
       next: () => {
-        this.notifications.success('User deleted', `${user.name} was removed.`);
+        this.notifications.success('Role assignment deleted', `${user.name} was removed.`);
         this.refresh();
       },
       error: (error) => {
-        this.notifications.error('Delete failed', error?.error?.error ?? 'Unable to delete user.');
+        this.notifications.error('Delete failed', error?.error?.error ?? 'Unable to delete role assignment.');
       },
     });
   }
@@ -149,5 +174,9 @@ export class AdminUsersComponent implements OnInit {
     }
 
     return role === 'ADMIN' ? 'Admin' : 'Customer';
+  }
+
+  protected roleCount(role: UserRole): number {
+    return this.users().filter((user) => user.role === role).length;
   }
 }

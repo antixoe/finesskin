@@ -55,7 +55,6 @@ export async function getHomeData() {
     completions,
   };
 }
-
 export async function getScanPageData() {
   const home = await getHomeData();
 
@@ -77,4 +76,3 @@ export async function getRoutinePageData() {
     completions: home?.completions ?? 0,
   };
 }
-

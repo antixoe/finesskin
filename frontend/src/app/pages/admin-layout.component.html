@@ -1,54 +1,57 @@
 <div class="admin-shell">
-  <aside class="admin-sidebar">
-    <div class="admin-sidebar__brand">
-      <span class="admin-sidebar__logo">F</span>
-      <div>
-        <div class="admin-sidebar__title">Finesskin</div>
-        <div class="admin-sidebar__sub">Admin console</div>
-      </div>
-    </div>
+  <header class="admin-topbar">
+    <a routerLink="/dashboard" class="admin-topbar__brand">
+      <span class="admin-topbar__logo">F</span>
+      <span>
+        <span class="admin-topbar__title">Finesskin</span>
+        <span class="admin-topbar__sub">Admin console</span>
+      </span>
+    </a>
 
-    <nav class="admin-sidebar__nav">
+    <nav class="admin-topbar__nav" aria-label="Admin navigation">
       <a
+        *ngIf="authService.hasPermission('DASHBOARD')"
         routerLink="/dashboard"
         routerLinkActive="is-active"
         [routerLinkActiveOptions]="{ exact: true }"
       >
-        <span class="admin-sidebar__icon" aria-hidden="true">◈</span>
+        <span class="admin-icon admin-icon--overview" aria-hidden="true"></span>
         Overview
       </a>
-      <a routerLink="/dashboard/users" routerLinkActive="is-active">
-        <span class="admin-sidebar__icon" aria-hidden="true">👥</span>
+      <a *ngIf="authService.hasPermission('USERS')" routerLink="/dashboard/users" routerLinkActive="is-active">
+        <span class="admin-icon admin-icon--users" aria-hidden="true"></span>
         Users
       </a>
-      <a routerLink="/dashboard/products" routerLinkActive="is-active">
-        <span class="admin-sidebar__icon" aria-hidden="true">🧴</span>
-        Products
-      </a>
-      <a routerLink="/dashboard/routines" routerLinkActive="is-active">
-        <span class="admin-sidebar__icon" aria-hidden="true">📋</span>
-        Routines
-      </a>
-      <a routerLink="/dashboard/scans" routerLinkActive="is-active">
-        <span class="admin-sidebar__icon" aria-hidden="true">📷</span>
-        Scans
-      </a>
-      <a routerLink="/dashboard/settings" routerLinkActive="is-active">
-        <span class="admin-sidebar__icon" aria-hidden="true">⚙️</span>
-        Settings
+      <a *ngIf="authService.hasPermission('ROLES')" routerLink="/dashboard/roles" routerLinkActive="is-active">
+        <span class="admin-icon admin-icon--roles" aria-hidden="true"></span>
+        Roles
       </a>
     </nav>
 
-    <div class="admin-sidebar__footer">
-      <div class="admin-sidebar__account">
-        <div class="admin-sidebar__name">{{ authService.user()?.name }}</div>
-        <div class="admin-sidebar__role">Administrator</div>
+    <details class="admin-menu">
+      <summary class="admin-menu__button">
+        <span class="admin-icon admin-icon--menu" aria-hidden="true"></span>
+        Manage
+      </summary>
+      <div class="admin-menu__list">
+        <a *ngIf="authService.hasPermission('ROUTINES')" routerLink="/dashboard/routines" routerLinkActive="is-active">Routines</a>
+        <a *ngIf="authService.hasPermission('SCANS')" routerLink="/dashboard/scans" routerLinkActive="is-active">Scans</a>
+        <a *ngIf="authService.hasPermission('SETTINGS')" routerLink="/dashboard/settings" routerLinkActive="is-active">Settings</a>
       </div>
-      <button type="button" class="admin-sidebar__logout" (click)="signOut()">
+    </details>
+
+    <div class="admin-topbar__account">
+      <span>
+        <span class="admin-topbar__name">{{ authService.user()?.name }}</span>
+        <span class="admin-topbar__role">
+          {{ authService.isSuperAdmin() ? 'Super Admin' : 'Administrator' }}
+        </span>
+      </span>
+      <button type="button" class="admin-topbar__logout" (click)="signOut()">
         Sign out
       </button>
     </div>
-  </aside>
+  </header>
 
   <main class="admin-content">
     <router-outlet />

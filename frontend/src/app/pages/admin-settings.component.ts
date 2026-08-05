@@ -2,8 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../core/admin-api.service';
+import { AuthService } from '../core/auth.service';
 import { NotificationService } from '../core/notification.service';
-import type { PlatformSettings } from '../core/finesskin.models';
+import type { ActivityLog, PlatformSettings } from '../core/finesskin.models';
 
 @Component({
   selector: 'app-admin-settings',
@@ -14,11 +15,13 @@ import type { PlatformSettings } from '../core/finesskin.models';
 })
 export class AdminSettingsComponent implements OnInit {
   private readonly api = inject(AdminApiService);
+  protected readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
 
   protected readonly loading = signal(true);
   protected readonly saving = signal(false);
   protected readonly formError = signal('');
+  protected readonly activityLogs = signal<ActivityLog[]>([]);
 
   protected settings: PlatformSettings = {
     platformName: '',
@@ -33,6 +36,7 @@ export class AdminSettingsComponent implements OnInit {
       next: (settings) => {
         this.settings = settings;
         this.loading.set(false);
+        this.loadActivityLogs();
       },
       error: () => {
         this.loading.set(false);
@@ -62,6 +66,7 @@ export class AdminSettingsComponent implements OnInit {
         next: (settings) => {
           this.settings = settings;
           this.saving.set(false);
+          this.loadActivityLogs();
           this.notifications.success('Settings saved', 'Platform configuration updated.');
         },
         error: (error) => {
@@ -69,5 +74,16 @@ export class AdminSettingsComponent implements OnInit {
           this.formError.set(error?.error?.error ?? 'Unable to save settings.');
         },
       });
+  }
+
+  private loadActivityLogs(): void {
+    if (!this.authService.isSuperAdmin()) {
+      return;
+    }
+
+    this.api.getActivityLogs().subscribe({
+      next: (logs) => this.activityLogs.set(logs),
+      error: () => this.notifications.error('Could not load activity logs'),
+    });
   }
 }

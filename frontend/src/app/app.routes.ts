@@ -6,7 +6,7 @@ import { ScanPageComponent } from './pages/scan-page.component';
 import { AdminLayoutComponent } from './pages/admin-layout.component';
 import { AdminDashboardPageComponent } from './pages/admin-dashboard-page.component';
 import { AdminUsersComponent } from './pages/admin-users.component';
-import { AdminProductsComponent } from './pages/admin-products.component';
+import { AdminRolesComponent } from './pages/admin-roles.component';
 import { AdminRoutinesComponent } from './pages/admin-routines.component';
 import { AdminScansComponent } from './pages/admin-scans.component';
 import { AdminSettingsComponent } from './pages/admin-settings.component';
@@ -41,8 +41,8 @@ export const routes: Routes = [
         component: AdminUsersComponent,
       },
       {
-        path: 'products',
-        component: AdminProductsComponent,
+        path: 'roles',
+        component: AdminRolesComponent,
       },
       {
         path: 'routines',

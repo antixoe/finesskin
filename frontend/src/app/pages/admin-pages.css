@@ -98,9 +98,15 @@
 .admin-panel {
   background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 1rem;
+  border-radius: 0.9rem;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
   overflow: hidden;
+}
+
+.admin-panel__header {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fcff;
 }
 
 .admin-table-wrap {
@@ -286,6 +292,107 @@
   border-radius: 0.5rem;
   padding: 0.55rem 0.8rem;
   font-size: 0.82rem;
+}
+
+.admin-form__permissions {
+  grid-column: 1 / -1;
+}
+
+.admin-permission-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.admin-permission-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.45rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.admin-permission-check input {
+  accent-color: #0ea5e9;
+}
+
+.admin-dashboard,
+.admin-dashboard-hero {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-dashboard-hero {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: clamp(1.4rem, 3vw, 2rem);
+  border: 1px solid rgba(212, 235, 251, 0.95);
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 249, 255, 0.92));
+  box-shadow: 0 18px 44px rgba(83, 155, 203, 0.1);
+}
+
+.admin-dashboard-strip {
+  width: 100%;
+  padding: 1.15rem;
+  border: 1px solid rgba(212, 235, 251, 0.95);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.admin-dashboard-strip--actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-metric-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-metric-row,
+.admin-role-summary__item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #e4f1fb;
+  border-radius: 0.85rem;
+  background: #fbfdff;
+}
+
+.admin-metric-row__icon,
+.admin-role-summary__item .admin-icon {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0.85rem;
+  background: #eff8ff;
+  color: #0c82c5;
+}
+
+.admin-role-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+@media (max-width: 720px) {
+  .admin-role-summary {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Feedback message */

@@ -74,7 +74,7 @@ export class App {
     request.subscribe({
       next: (response) => {
         this.releaseBusy(startedAt, MIN_LOADING_MS);
-        const isAdmin = response.user.role === 'ADMIN';
+        const isAdmin = response.user.role === 'ADMIN' || response.user.role === 'SUPER_ADMIN';
 
         this.authSuccess = isSignUp
           ? `Hi, ${response.user.name}! Your account is ready.`

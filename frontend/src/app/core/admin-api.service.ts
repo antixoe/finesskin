@@ -16,6 +16,7 @@ import type {
   AdminUserPayload,
   AdminUserUpdatePayload,
   AdminUsersResponse,
+  ActivityLog,
   PlatformSettings,
 } from './finesskin.models';
 
@@ -152,5 +153,13 @@ export class AdminApiService {
         headers: this.headers(),
       })
       .pipe(map((response) => response.settings));
+  }
+
+  getActivityLogs() {
+    return this.http
+      .get<AdminSettingsResponse>('/api/admin/settings', {
+        headers: this.headers(),
+      })
+      .pipe(map((response) => response.activityLogs ?? [] as ActivityLog[]));
   }
 }

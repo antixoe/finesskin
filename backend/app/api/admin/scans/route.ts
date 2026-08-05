@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "SCANS");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });

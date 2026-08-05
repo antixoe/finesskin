@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
-import type { AdminStats, AuthResponse, AuthUser } from './finesskin.models';
+import type { AdminPermission, AdminStats, AuthResponse, AuthUser } from './finesskin.models';
 
 const SESSION_KEY = 'finesskin-session';
 
@@ -15,7 +15,25 @@ export class AuthService {
   readonly token = this.tokenSignal.asReadonly();
   readonly user = this.userSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.userSignal() !== null);
-  readonly isAdmin = computed(() => this.userSignal()?.role === 'ADMIN');
+  readonly isAdmin = computed(() => {
+    const role = this.userSignal()?.role;
+    return role === 'ADMIN' || role === 'SUPER_ADMIN';
+  });
+  readonly isSuperAdmin = computed(() => this.userSignal()?.role === 'SUPER_ADMIN');
+
+  hasPermission(permission: AdminPermission): boolean {
+    const user = this.userSignal();
+
+    if (!user) {
+      return false;
+    }
+
+    if (user.role === 'SUPER_ADMIN') {
+      return true;
+    }
+
+    return user.role === 'ADMIN' && user.permissions.includes(permission);
+  }
 
   constructor() {
     this.restoreSession();

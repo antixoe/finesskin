@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { DEFAULT_ADMIN_PERMISSIONS, logActivity, parsePermissions, requireAnyAdmin, serializePermissions } from "@/lib/admin";
 import { hashPassword } from "@/lib/auth";
 import { UserRole } from "@/generated/prisma/client";
 
@@ -12,7 +12,7 @@ type Params = {
 };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const admin = requireAdmin(request);
+  const admin = await requireAnyAdmin(request, ["USERS", "ROLES"]);
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -24,6 +24,7 @@ export async function PATCH(request: Request, { params }: Params) {
     email?: string;
     password?: string;
     role?: string;
+    permissions?: string[];
   };
 
   const user = await prisma.user.findUnique({ where: { id } });
@@ -32,13 +33,19 @@ export async function PATCH(request: Request, { params }: Params) {
     return Response.json({ error: "User not found." }, { status: 404 });
   }
 
-  if (body.role && body.role !== "ADMIN" && body.role !== "CUSTOMER") {
+  if (body.role && body.role !== "SUPER_ADMIN" && body.role !== "ADMIN" && body.role !== "CUSTOMER") {
     return Response.json({ error: "Invalid role." }, { status: 400 });
   }
 
+  if (body.role === "SUPER_ADMIN" && admin.role !== "SUPER_ADMIN") {
+    return Response.json({ error: "Super admin role is required." }, { status: 403 });
+  }
+
   if (body.role && body.role !== user.role) {
-    if (user.role === "ADMIN" && body.role !== "ADMIN") {
-      const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+    if ((user.role === "ADMIN" || user.role === "SUPER_ADMIN") && body.role !== user.role) {
+      const adminCount = await prisma.user.count({
+        where: { role: { in: ["ADMIN", "SUPER_ADMIN"] } },
+      });
 
       if (adminCount <= 1) {
         return Response.json(
@@ -75,6 +82,14 @@ export async function PATCH(request: Request, { params }: Params) {
       name: body.name?.trim() || undefined,
       email,
       role: (body.role as UserRole) ?? undefined,
+      permissions:
+        body.role === "CUSTOMER"
+          ? "[]"
+          : body.permissions
+            ? serializePermissions(body.permissions)
+            : body.role === "ADMIN" && !user.permissions
+              ? serializePermissions(DEFAULT_ADMIN_PERMISSIONS)
+              : undefined,
       password: body.password ? hashPassword(body.password) : undefined,
     },
     select: {
@@ -82,6 +97,7 @@ export async function PATCH(request: Request, { params }: Params) {
       name: true,
       email: true,
       role: true,
+      permissions: true,
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
@@ -91,11 +107,18 @@ export async function PATCH(request: Request, { params }: Params) {
     },
   });
 
-  return Response.json({ user: updated });
+  await logActivity(admin.sub, "UPDATE_USER", `user:${updated.id}`, `${updated.email} updated.`);
+
+  return Response.json({
+    user: {
+      ...updated,
+      permissions: parsePermissions(updated.permissions),
+    },
+  });
 }
 
 export async function DELETE(request: Request, { params }: Params) {
-  const admin = requireAdmin(request);
+  const admin = await requireAnyAdmin(request, ["USERS", "ROLES"]);
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -116,8 +139,10 @@ export async function DELETE(request: Request, { params }: Params) {
     );
   }
 
-  if (target.role === "ADMIN") {
-    const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+  if (target.role === "ADMIN" || target.role === "SUPER_ADMIN") {
+    const adminCount = await prisma.user.count({
+      where: { role: { in: ["ADMIN", "SUPER_ADMIN"] } },
+    });
 
     if (adminCount <= 1) {
       return Response.json(
@@ -126,6 +151,8 @@ export async function DELETE(request: Request, { params }: Params) {
       );
     }
   }
+
+  await logActivity(admin.sub, "DELETE_USER", `user:${target.id}`, `${target.email} deleted.`);
 
   // Cascades remove the user's products, routines, and scans.
   await prisma.user.delete({ where: { id } });

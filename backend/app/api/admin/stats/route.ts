@@ -1,17 +1,12 @@
 import prisma from "@/lib/prisma";
-import { readBearerToken, verifyToken } from "@/lib/auth";
+import { requireAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const token = readBearerToken(request.headers.get("authorization"));
-  const payload = token ? verifyToken(token) : null;
+  const admin = await requireAdmin(request, "DASHBOARD");
 
-  if (!payload) {
-    return Response.json({ error: "Unauthorized." }, { status: 401 });
-  }
-
-  if (payload.role !== "ADMIN") {
+  if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
   }
 

@@ -1,4 +1,4 @@
-import "dotenv/config";
+import { config as loadEnv } from "dotenv";
 import {
   PrismaClient,
   ProductCategory,
@@ -11,8 +11,21 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { buildSkinAnalysis } from "@/lib/analysis";
 import { hashPassword } from "@/lib/auth";
 
+loadEnv({ path: ".env.local" });
+loadEnv();
+
 const ADMIN_EMAIL = "admin@finesskin.ai";
 const ADMIN_PASSWORD = "admin123";
+const SUPER_ADMIN_EMAIL = "superadmin@finesskin.ai";
+const SUPER_ADMIN_PASSWORD = "superadmin123";
+const ADMIN_PERMISSIONS = JSON.stringify([
+  "DASHBOARD",
+  "USERS",
+  "ROLES",
+  "ROUTINES",
+  "SCANS",
+  "SETTINGS",
+]);
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -54,6 +67,7 @@ async function main() {
       name: "Finesskin Admin",
       avatarUrl: null,
       role: UserRole.ADMIN,
+      permissions: ADMIN_PERMISSIONS,
       password: hashPassword(ADMIN_PASSWORD),
     },
     create: {
@@ -61,7 +75,27 @@ async function main() {
       email: ADMIN_EMAIL,
       avatarUrl: null,
       role: UserRole.ADMIN,
+      permissions: ADMIN_PERMISSIONS,
       password: hashPassword(ADMIN_PASSWORD),
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: SUPER_ADMIN_EMAIL },
+    update: {
+      name: "Finesskin Super Admin",
+      avatarUrl: null,
+      role: UserRole.SUPER_ADMIN,
+      permissions: ADMIN_PERMISSIONS,
+      password: hashPassword(SUPER_ADMIN_PASSWORD),
+    },
+    create: {
+      name: "Finesskin Super Admin",
+      email: SUPER_ADMIN_EMAIL,
+      avatarUrl: null,
+      role: UserRole.SUPER_ADMIN,
+      permissions: ADMIN_PERMISSIONS,
+      password: hashPassword(SUPER_ADMIN_PASSWORD),
     },
   });
 

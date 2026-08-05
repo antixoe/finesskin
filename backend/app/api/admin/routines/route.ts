@@ -5,7 +5,7 @@ import { RoutineTiming } from "@/generated/prisma/client";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "ROUTINES");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "ROUTINES");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });

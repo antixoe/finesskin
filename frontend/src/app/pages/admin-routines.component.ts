@@ -144,5 +144,7 @@ export class AdminRoutinesComponent implements OnInit {
     this.api.getRoutines().subscribe((routines) => this.routines.set(routines));
   }
 
-  protected readonly timingLabel = routineTimingLabel;
+  protected timingLabel(timing: RoutineTiming): string {
+    return routineTimingLabel[timing];
+  }
 }

@@ -10,7 +10,7 @@ type Params = {
 };
 
 export async function DELETE(_request: Request, { params }: Params) {
-  const admin = requireAdmin(_request);
+  const admin = await requireAdmin(_request, "SCANS");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });

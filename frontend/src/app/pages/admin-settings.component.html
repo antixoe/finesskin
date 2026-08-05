@@ -42,5 +42,45 @@
     </form>
   </section>
 
-  <p class="admin-loading" *ngIf="loading()">Loading settings…</p>
+  <section class="admin-panel" *ngIf="authService.isSuperAdmin()">
+    <div class="admin-panel__header">
+      <div>
+        <p class="admin-page__eyebrow">Super admin</p>
+        <h2 class="admin-page__title">Activity log</h2>
+        <p class="admin-page__subtitle">
+          Recent admin actions across settings, users, roles, and permissions.
+        </p>
+      </div>
+    </div>
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Target</th>
+            <th>Detail</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of activityLogs()">
+            <td class="admin-table__cell-strong">{{ log.action }}</td>
+            <td>
+              <div>{{ log.actor?.name || 'System' }}</div>
+              <div class="admin-table__cell-sub" *ngIf="log.actor">{{ log.actor.email }}</div>
+            </td>
+            <td>{{ log.target }}</td>
+            <td>{{ log.detail || 'No detail' }}</td>
+            <td class="admin-table__cell-sub">{{ log.createdAt | date: 'medium' }}</td>
+          </tr>
+          <tr *ngIf="activityLogs().length === 0">
+            <td colspan="5" class="admin-table__empty">No activity recorded yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="admin-loading" *ngIf="loading()">Loading settings...</p>
 </div>

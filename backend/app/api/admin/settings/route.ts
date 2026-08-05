@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { requireAdmin } from "@/lib/admin";
+import { logActivity, requireAdmin } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ function toBoolean(value: string): boolean {
 }
 
 export async function GET(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "SETTINGS");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -37,11 +37,26 @@ export async function GET(request: Request) {
       allowSignups: toBoolean(store.allowSignups),
       maintenanceMode: toBoolean(store.maintenanceMode),
     },
+    activityLogs:
+      admin.role === "SUPER_ADMIN"
+        ? await prisma.activityLog.findMany({
+            orderBy: { createdAt: "desc" },
+            take: 25,
+            include: {
+              actor: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
+            },
+          })
+        : [],
   });
 }
 
 export async function PUT(request: Request) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "SETTINGS");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -91,6 +106,8 @@ export async function PUT(request: Request) {
       }),
     ),
   );
+
+  await logActivity(admin.sub, "UPDATE_SETTINGS", "settings", "Platform settings updated.");
 
   return Response.json({
     settings: {

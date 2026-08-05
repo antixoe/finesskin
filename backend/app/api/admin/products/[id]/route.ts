@@ -11,7 +11,7 @@ type Params = {
 };
 
 export async function PATCH(request: Request, { params }: Params) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "ROUTINES");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(request: Request, { params }: Params) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request, "ROUTINES");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });

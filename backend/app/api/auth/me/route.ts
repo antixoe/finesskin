@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { parsePermissions } from "@/lib/admin";
 import { readBearerToken, verifyToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
       name: user.name,
       email: user.email,
       role: user.role,
+      permissions: parsePermissions(user.permissions),
       avatarUrl: user.avatarUrl,
     },
   });

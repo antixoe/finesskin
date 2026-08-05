@@ -31,6 +31,7 @@ enum ScanSource {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   CUSTOMER
 }
@@ -41,6 +42,7 @@ model User {
   email     String    @unique
   avatarUrl String?
   role      UserRole  @default(CUSTOMER)
+  permissions String  @default("[]")
   password  String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -48,6 +50,7 @@ model User {
   products  Product[]
   routines  Routine[]
   scans     SkinScan[]
+  activityLogs ActivityLog[]
 }
 
 model Product {
@@ -138,4 +141,18 @@ model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  target    String
+  detail    String?
+  createdAt DateTime @default(now())
+
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([actorId])
 }

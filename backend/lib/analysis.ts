@@ -91,4 +91,3 @@ export function recommendationsToJson(
 ): Prisma.InputJsonValue {
   return recommendations;
 }
-

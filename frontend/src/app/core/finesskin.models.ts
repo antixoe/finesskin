@@ -1,10 +1,12 @@
-export type UserRole = 'ADMIN' | 'CUSTOMER';
+export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'CUSTOMER';
+export type AdminPermission = 'DASHBOARD' | 'USERS' | 'ROLES' | 'ROUTINES' | 'SCANS' | 'SETTINGS';
 
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  permissions: AdminPermission[];
   avatarUrl: string | null;
 }
 
@@ -134,6 +136,7 @@ export interface AdminUser {
   name: string;
   email: string;
   role: UserRole;
+  permissions: AdminPermission[];
   avatarUrl: string | null;
   createdAt: string;
   updatedAt: string;
@@ -194,6 +197,19 @@ export interface PlatformSettings {
   maintenanceMode: boolean;
 }
 
+export interface ActivityLog {
+  id: string;
+  actorId: string | null;
+  action: string;
+  target: string;
+  detail: string | null;
+  createdAt: string;
+  actor: {
+    name: string;
+    email: string;
+  } | null;
+}
+
 export interface AdminUsersResponse {
   users: AdminUser[];
 }
@@ -212,6 +228,7 @@ export interface AdminScansResponse {
 
 export interface AdminSettingsResponse {
   settings: PlatformSettings;
+  activityLogs: ActivityLog[];
 }
 
 export interface AdminUserPayload {
@@ -219,6 +236,7 @@ export interface AdminUserPayload {
   email: string;
   password?: string;
   role: UserRole;
+  permissions?: AdminPermission[];
 }
 
 export interface AdminProductPayload {
@@ -244,4 +262,5 @@ export interface AdminUserUpdatePayload {
   email?: string;
   password?: string;
   role?: UserRole;
+  permissions?: AdminPermission[];
 }
