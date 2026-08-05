@@ -1,0 +1,198 @@
+<div class="app-shell">
+  <header class="site-header-shell">
+    <div class="site-header">
+      <a routerLink="/" class="brand">
+        <span class="brand__script">Finesskin</span>
+        <span class="brand__caption">Soft skin intelligence</span>
+      </a>
+
+      <nav class="site-nav">
+        <ng-container *ngIf="authService.isAdmin(); else marketingNav">
+          <a routerLink="/dashboard" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+            Dashboard
+          </a>
+          <a routerLink="/scan" routerLinkActive="is-active">Skin Scan</a>
+          <a routerLink="/routines" routerLinkActive="is-active">Routines</a>
+        </ng-container>
+        <ng-template #marketingNav>
+          <a href="/#home">Home</a>
+          <a href="/#about">About</a>
+          <a href="/#collection">How It Works</a>
+          <a href="/#contact">Contact</a>
+        </ng-template>
+      </nav>
+
+      <ng-container *ngIf="authService.user() as user; else signInButton">
+        <div class="site-account">
+          <span class="site-account__name">{{ user.name }}</span>
+          <span class="site-account__role" *ngIf="user.role === 'ADMIN'">Admin</span>
+          <button type="button" class="site-logout" (click)="signOut()">Sign out</button>
+        </div>
+      </ng-container>
+      <ng-template #signInButton>
+        <button type="button" class="site-login" (click)="openAuth('signin')">
+          Sign In / Sign Up
+        </button>
+      </ng-template>
+    </div>
+  </header>
+
+  <main class="container app-main">
+    <router-outlet />
+  </main>
+
+  <app-notification-container />
+
+  <div
+    class="auth-modal-backdrop"
+    *ngIf="authModal.isOpen()"
+    (click)="closeAuth()"
+  >
+    <section class="auth-modal" (click)="$event.stopPropagation()">
+      <button
+        type="button"
+        class="auth-modal__close"
+        aria-label="Close auth modal"
+        (click)="closeAuth()"
+      >
+        &times;
+      </button>
+
+      <p class="auth-modal__eyebrow">Account access</p>
+      <h2 class="auth-modal__title">
+        {{ authModal.mode() === 'signin' ? 'Welcome back.' : 'Create your account.' }}
+      </h2>
+      <p class="auth-modal__copy">
+        {{
+          authModal.mode() === 'signin'
+            ? 'Sign in to continue your skin tracking and routine care.'
+            : 'Start tracking your routine, scan progress, and skincare habits.'
+        }}
+      </p>
+
+      <div class="auth-modal__switch">
+        <button
+          type="button"
+          class="auth-modal__switch-btn"
+          [class.is-active]="authModal.mode() === 'signin'"
+          [disabled]="authBusy()"
+          (click)="setAuthMode('signin')"
+        >
+          Sign In
+        </button>
+        <button
+          type="button"
+          class="auth-modal__switch-btn"
+          [class.is-active]="authModal.mode() === 'signup'"
+          [disabled]="authBusy()"
+          (click)="setAuthMode('signup')"
+        >
+          Sign Up
+        </button>
+      </div>
+
+      <form class="auth-modal__form" [class.is-busy]="authBusy()" (submit)="submitAuth(); $event.preventDefault()">
+        <label class="auth-modal__field" *ngIf="authModal.mode() === 'signup'">
+          <span>Full name</span>
+          <input
+            type="text"
+            name="name"
+            [(ngModel)]="authName"
+            placeholder="Your name"
+            autocomplete="name"
+            [disabled]="authBusy()"
+            required
+          />
+        </label>
+
+        <label class="auth-modal__field">
+          <span>Email</span>
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="authEmail"
+            placeholder="you@example.com"
+            autocomplete="email"
+            [disabled]="authBusy()"
+            required
+          />
+        </label>
+
+        <label class="auth-modal__field">
+          <span>Password</span>
+          <div class="auth-modal__password">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              name="password"
+              [(ngModel)]="authPassword"
+              placeholder="Enter your password"
+              [autocomplete]="authModal.mode() === 'signin' ? 'current-password' : 'new-password'"
+              [disabled]="authBusy()"
+              required
+            />
+            <button
+              type="button"
+              class="auth-modal__eye"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [attr.aria-pressed]="showPassword()"
+              [disabled]="authBusy()"
+              (click)="togglePassword()"
+            >
+              <svg
+                *ngIf="!showPassword()"
+                class="auth-modal__eye-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg
+                *ngIf="showPassword()"
+                class="auth-modal__eye-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 8 10 8a13.16 13.16 0 0 1-1.67 2.68"></path>
+                <path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                <line x1="2" x2="22" y1="2" y2="22"></line>
+              </svg>
+            </button>
+          </div>
+        </label>
+
+        <p class="auth-modal__feedback auth-modal__feedback--error" *ngIf="authError">
+          {{ authError }}
+        </p>
+
+        <p class="auth-modal__feedback auth-modal__feedback--success" *ngIf="authSuccess">
+          {{ authSuccess }}
+        </p>
+
+        <button
+          type="submit"
+          class="auth-modal__submit"
+          [class.is-loading]="authBusy()"
+          [disabled]="authBusy()"
+        >
+          <span class="auth-modal__spinner" *ngIf="authBusy()" aria-hidden="true"></span>
+          <span class="auth-modal__submit-label">
+            {{ authBusy()
+              ? (authModal.mode() === 'signin' ? 'Signing in...' : 'Creating account...')
+              : authModal.mode() === 'signin' ? 'Sign In' : 'Create Account' }}
+          </span>
+        </button>
+      </form>
+    </section>
+  </div>
+</div>

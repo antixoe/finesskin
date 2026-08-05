@@ -1,0 +1,64 @@
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <p class="admin-page__eyebrow">Scan history</p>
+      <h1 class="admin-page__title">Scans</h1>
+      <p class="admin-page__subtitle">
+        Every AI skin analysis recorded across the platform.
+      </p>
+    </div>
+  </header>
+
+  <section class="admin-panel">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Source</th>
+            <th>Score</th>
+            <th>Metrics</th>
+            <th>Summary</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading()">
+          <tr *ngFor="let scan of scans()">
+            <td>
+              <div class="admin-table__cell-strong">{{ scan.user.name }}</div>
+              <div class="admin-table__cell-sub">{{ scan.user.email }}</div>
+            </td>
+            <td>
+              <span class="admin-badge admin-badge--muted">{{ sourceLabel(scan.source) }}</span>
+            </td>
+            <td>
+              <span class="admin-badge" [class.admin-badge--active]="scan.score >= 70" [class.admin-badge--inactive]="scan.score < 70">
+                {{ scan.score }}/100
+              </span>
+            </td>
+            <td class="admin-table__cell-sub">
+              Hydration {{ scan.hydration }}% · Redness {{ scan.redness }}% · Acne {{ scan.acne }}% · Barrier {{ scan.barrier }}%
+            </td>
+            <td>
+              <span class="admin-table__cell-sub" style="display: block; max-width: 18rem">{{ scan.summary }}</span>
+            </td>
+            <td class="admin-table__cell-sub">{{ scan.createdAt | date: 'medium' }}</td>
+            <td>
+              <div class="admin-actions" style="justify-content: flex-end">
+                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" (click)="deleteScan(scan)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="scans().length === 0">
+            <td colspan="7" class="admin-table__empty">No scans recorded yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="admin-loading" *ngIf="loading()">Loading scans…</p>
+  </section>
+
+</div>

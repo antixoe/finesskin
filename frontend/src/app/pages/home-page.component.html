@@ -1,0 +1,168 @@
+<section class="editorial-home" id="home">
+  <section class="editorial-hero">
+    <div class="editorial-panel editorial-panel--lilac">
+      <div class="editorial-panel__navline">
+        <span>Skin Insight</span>
+        <span>Routine Care</span>
+        <span>Habit Helper</span>
+      </div>
+      <div class="editorial-panel__copy">
+        <p class="editorial-panel__eyebrow">Smart skincare companion</p>
+        <h1 class="editorial-panel__title">Finesskin</h1>
+        <p class="editorial-panel__subcopy">
+          Understand your skin, organize your routine, and stay consistent with
+          daily care in one clear web experience.
+        </p>
+        <div class="editorial-panel__actions">
+          <button type="button" class="editorial-link" (click)="openSignUp()">
+            Get Started
+          </button>
+          <a href="#collection" class="editorial-link editorial-link--ghost">See How It Works</a>
+        </div>
+      </div>
+      <div class="editorial-panel__index">01</div>
+    </div>
+
+    <div class="editorial-photo editorial-photo--hero">
+      <div class="editorial-photo__wash"></div>
+      <div class="editorial-photo__placeholder editorial-photo__placeholder--portrait">
+        <span>Replace with model photo</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="editorial-story" id="about">
+    <div class="editorial-story__visual">
+      <div class="editorial-story__product"></div>
+      <div class="editorial-story__figure editorial-story__figure--left">
+        <span>Photo slot</span>
+      </div>
+      <div class="editorial-story__figure editorial-story__figure--right">
+        <span>Photo slot</span>
+      </div>
+    </div>
+
+    <div class="editorial-story__copy">
+      <p class="editorial-kicker">Routine care · skin insight</p>
+      <h2 class="editorial-display">Simple enough to use every day.</h2>
+      <p class="editorial-body">
+        Finesskin is a skincare web app that helps users understand their skin
+        using smart skin analysis and stay consistent with daily care through a
+        routine tracker.
+      </p>
+      <p class="editorial-body">
+        It also works like a habit helper for AM and PM routines, making it
+        easier to follow products, care steps, and long-term skin progress in a
+        more organized way.
+      </p>
+      <button type="button" class="editorial-link" (click)="openSignUp()">
+        Start Your Routine
+      </button>
+    </div>
+  </section>
+
+  <section class="editorial-gallery" id="collection">
+    <div class="editorial-gallery__label">How It Works</div>
+    <div class="editorial-gallery__grid">
+      <article class="editorial-card editorial-card--product">
+        <div class="editorial-card__visual editorial-card__visual--bottle"></div>
+        <h3>1. Scan</h3>
+      </article>
+      <article class="editorial-card editorial-card--product">
+        <div class="editorial-card__visual editorial-card__visual--jar"></div>
+        <h3>2. Track</h3>
+      </article>
+      <article class="editorial-card editorial-card--product">
+        <div class="editorial-card__visual editorial-card__visual--set"></div>
+        <h3>3. Follow</h3>
+      </article>
+      <article class="editorial-card editorial-card--product">
+        <div class="editorial-card__visual editorial-card__visual--tone"></div>
+        <h3>4. Improve</h3>
+      </article>
+    </div>
+  </section>
+
+  <section class="editorial-banner">
+    <div class="editorial-banner__word">Skin Flow</div>
+    <div class="editorial-banner__product"></div>
+    <div class="editorial-banner__swatch"></div>
+    <div class="editorial-banner__orb">24/7</div>
+  </section>
+
+  <section class="editorial-feature-stack">
+    <article
+      class="editorial-feature"
+      *ngFor="let feature of featureCards; let i = index"
+    >
+      <span
+        class="editorial-feature__icon"
+        [ngClass]="'editorial-feature__icon--' + i"
+        aria-hidden="true"
+      ></span>
+      <div class="editorial-feature__content">
+        <span class="editorial-feature__eyebrow">{{ feature.eyebrow }}</span>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="editorial-contact" id="contact">
+    <div class="editorial-contact__copy">
+      <div class="editorial-contact__ornament" aria-hidden="true">
+        <span class="editorial-contact__orb editorial-contact__orb--one"></span>
+        <span class="editorial-contact__orb editorial-contact__orb--two"></span>
+        <span class="editorial-contact__line"></span>
+      </div>
+      <p class="editorial-kicker">Contact</p>
+      <h2 class="editorial-contact__title">Need help or have a question?</h2>
+      <p class="editorial-body">
+        Reach out for support, partnerships, launch questions, or help getting
+        started with your routine.
+      </p>
+      <button type="button" class="editorial-contact__cta" (click)="openSignUp()">
+        Start Your Routine
+      </button>
+    </div>
+
+    <div class="editorial-contact__panel">
+      <div class="editorial-contact-scene">
+        <div class="editorial-contact-scene__frame editorial-contact-scene__frame--main">
+          <div class="editorial-contact-scene__badge">Support desk</div>
+          <div class="editorial-contact-scene__media"></div>
+          <div class="editorial-contact-scene__content">
+            <strong>Need help with your routine, skin scan, or account?</strong>
+            <p>
+              Use the contact routes below and the right team will respond.
+            </p>
+          </div>
+        </div>
+
+        <div class="editorial-contact-scene__frame editorial-contact-scene__frame--note">
+          <span>Best for</span>
+          <strong>Support, collabs, and launch questions</strong>
+        </div>
+      </div>
+
+      <div class="editorial-contact__panel-label">Connect with us</div>
+      <div class="editorial-contact__cards">
+        <article class="editorial-contact__card">
+          <span class="editorial-contact__card-type">Email</span>
+          <strong>hello@finesskin.ai</strong>
+          <small>General support and product questions</small>
+        </article>
+        <article class="editorial-contact__card">
+          <span class="editorial-contact__card-type">Instagram</span>
+          <strong>@finesskin.official</strong>
+          <small>Brand updates and skincare content</small>
+        </article>
+        <article class="editorial-contact__card">
+          <span class="editorial-contact__card-type">Business</span>
+          <strong>partnerships@finesskin.ai</strong>
+          <small>Partnerships, clinics, and collaborations</small>
+        </article>
+      </div>
+    </div>
+  </section>
+</section>

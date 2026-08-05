@@ -1,0 +1,11 @@
+<svg width="64" height="64" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="finesskin-accent" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1AAFFF"/>
+      <stop offset="1" stop-color="#8EDFFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="14" width="132" height="132" rx="38" fill="url(#finesskin-accent)"/>
+  <rect x="27" y="27" width="106" height="106" rx="30" stroke="white" stroke-opacity="0.34" stroke-width="2"/>
+  <path d="M54 108V52H109V64H68.2V77.2H104.4V89H68.2V108H54Z" fill="white"/>
+</svg>

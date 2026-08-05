@@ -1,0 +1,62 @@
+<section class="panel section-intro">
+  <p class="section-label">Admin dashboard</p>
+  <h1 class="headline-lg">Hi, {{ authService.user()?.name }} 👋</h1>
+  <p class="lead-copy">
+    Here is a live snapshot of the Finesskin database — users, products,
+    routines, scans, and completions.
+  </p>
+</section>
+
+<section class="panel" *ngIf="loading()">
+  <p class="card-copy">Loading platform stats…</p>
+</section>
+
+<section class="panel" *ngIf="error()">
+  <p class="card-copy auth-error">{{ error() }}</p>
+</section>
+
+<section class="dashboard-grid" *ngIf="stats() as stats">
+  <div class="four-grid">
+    <div class="metric-card hover-lift">
+      <div class="muted-sm">Registered users</div>
+      <div class="big-number">{{ stats.users }}</div>
+      <p class="card-copy">Accounts on the platform</p>
+    </div>
+    <div class="metric-card hover-lift">
+      <div class="muted-sm">Products</div>
+      <div class="big-number">{{ stats.products }}</div>
+      <p class="card-copy">Products in the library</p>
+    </div>
+    <div class="metric-card hover-lift">
+      <div class="muted-sm">Routines</div>
+      <div class="big-number">{{ stats.routines }}</div>
+      <p class="card-copy">AM / PM care stacks</p>
+    </div>
+    <div class="metric-card hover-lift">
+      <div class="muted-sm">Scans</div>
+      <div class="big-number">{{ stats.scans }}</div>
+      <p class="card-copy">Skin analyses recorded</p>
+    </div>
+  </div>
+
+  <section class="stack-md">
+    <article class="panel">
+      <p class="section-label">Completions</p>
+      <div class="big-number">{{ stats.completions }}</div>
+      <p class="card-copy">
+        Total routine completion events logged across the platform.
+      </p>
+    </article>
+
+    <article class="dark-card">
+      <p class="section-label section-label--dark">Quick links</p>
+      <div class="tag-row" style="margin-top: 1rem; flex-wrap: wrap">
+        <a routerLink="/dashboard/users" class="btn btn--accent">Manage Users</a>
+        <a routerLink="/dashboard/products" class="btn btn--accent">Manage Products</a>
+        <a routerLink="/dashboard/routines" class="btn btn--accent">Manage Routines</a>
+        <a routerLink="/dashboard/scans" class="btn btn--accent">View Scans</a>
+        <a routerLink="/dashboard/settings" class="btn btn--accent">Settings</a>
+      </div>
+    </article>
+  </section>
+</section>
