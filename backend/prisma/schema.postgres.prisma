@@ -47,10 +47,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products Product[]
-  routines Routine[]
-  scans    SkinScan[]
+  products  Product[]
+  routines  Routine[]
+  scans     SkinScan[]
   activityLogs ActivityLog[]
+  habits    Habit[]
+  todos     TodoItem[]
+  moods     MoodEntry[]
+  drinkLogs DrinkLog[]
 }
 
 model Product {
@@ -155,4 +159,72 @@ model ActivityLog {
 
   @@index([createdAt])
   @@index([actorId])
+}
+
+model Habit {
+  id           String     @id @default(cuid())
+  userId       String
+  title        String
+  emoji        String     @default("⭐")
+  scheduleType String     @default("daily") // daily | weekly | dates
+  weekdays     Json?      // e.g. [1, 3, 5] for weekly (0 = Sunday)
+  dates        Json?      // e.g. ["2026-08-10"] for specific dates
+  note         String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs         HabitLog[]
+
+  @@index([userId])
+}
+
+model HabitLog {
+  id      String  @id @default(cuid())
+  habitId String
+  date    String
+  done    Boolean @default(true)
+
+  habit   Habit   @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+}
+
+model TodoItem {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model MoodEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String
+  mood      String
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model DrinkLog {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String
+  glasses   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }

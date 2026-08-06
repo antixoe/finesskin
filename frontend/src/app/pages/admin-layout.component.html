@@ -26,19 +26,19 @@
         <span class="admin-icon admin-icon--roles" aria-hidden="true"></span>
         Roles
       </a>
+      <a *ngIf="authService.hasPermission('ROUTINES')" routerLink="/dashboard/routines" routerLinkActive="is-active">
+        <i class="bi bi-calendar2-week-fill" aria-hidden="true"></i>
+        Routines
+      </a>
+      <a *ngIf="authService.hasPermission('SCANS')" routerLink="/dashboard/scans" routerLinkActive="is-active">
+        <i class="bi bi-camera-fill" aria-hidden="true"></i>
+        Scans
+      </a>
+      <a *ngIf="authService.hasPermission('SETTINGS')" routerLink="/dashboard/settings" routerLinkActive="is-active">
+        <i class="bi bi-gear-fill" aria-hidden="true"></i>
+        Settings
+      </a>
     </nav>
-
-    <details class="admin-menu">
-      <summary class="admin-menu__button">
-        <span class="admin-icon admin-icon--menu" aria-hidden="true"></span>
-        Manage
-      </summary>
-      <div class="admin-menu__list">
-        <a *ngIf="authService.hasPermission('ROUTINES')" routerLink="/dashboard/routines" routerLinkActive="is-active">Routines</a>
-        <a *ngIf="authService.hasPermission('SCANS')" routerLink="/dashboard/scans" routerLinkActive="is-active">Scans</a>
-        <a *ngIf="authService.hasPermission('SETTINGS')" routerLink="/dashboard/settings" routerLinkActive="is-active">Settings</a>
-      </div>
-    </details>
 
     <div class="admin-topbar__account">
       <span>
@@ -47,9 +47,6 @@
           {{ authService.isSuperAdmin() ? 'Super Admin' : 'Administrator' }}
         </span>
       </span>
-      <button type="button" class="admin-topbar__logout" (click)="signOut()">
-        Sign out
-      </button>
     </div>
   </header>
 

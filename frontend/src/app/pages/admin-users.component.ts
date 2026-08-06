@@ -22,6 +22,12 @@ export class AdminUsersComponent implements OnInit {
   protected readonly editingId = signal<string | null>(null);
   protected readonly saving = signal(false);
   protected readonly formError = signal('');
+  protected readonly confirmModalOpen = signal(false);
+  protected readonly confirmTitle = signal('');
+  protected readonly confirmMessage = signal('');
+  protected readonly confirmActionLabel = signal('Confirm');
+  protected readonly confirmDanger = signal(false);
+  private pendingConfirmAction: (() => void) | null = null;
 
   protected formName = '';
   protected formEmail = '';
@@ -53,6 +59,7 @@ export class AdminUsersComponent implements OnInit {
     this.formPassword = '';
     this.formRole = 'CUSTOMER';
     this.formError.set('');
+    this.confirmModalOpen.set(false);
     this.showForm.set(true);
   }
 
@@ -63,13 +70,30 @@ export class AdminUsersComponent implements OnInit {
     this.formPassword = '';
     this.formRole = user.role;
     this.formError.set('');
+    this.confirmModalOpen.set(false);
     this.showForm.set(true);
   }
 
-  protected cancelForm(): void {
+  protected requestCancelForm(): void {
+    if (!this.hasDraftChanges()) {
+      this.closeForm();
+      return;
+    }
+
+    this.openConfirmModal(
+      'Discard changes?',
+      'Your edits have not been saved yet. Are you sure you want to cancel?',
+      'Discard',
+      true,
+      () => this.closeForm(),
+    );
+  }
+
+  protected closeForm(): void {
     this.showForm.set(false);
     this.editingId.set(null);
     this.formError.set('');
+    this.confirmModalOpen.set(false);
   }
 
   protected save(): void {
@@ -104,43 +128,74 @@ export class AdminUsersComponent implements OnInit {
           role: this.formRole,
         });
 
-    request.subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.showForm.set(false);
-        this.editingId.set(null);
-        if (editing) {
-          this.notifications.success('User updated', `${name} has been updated.`);
-        } else {
-          this.notifications.success('User created', `${name} now has an account.`);
-        }
-        this.refresh();
-      },
-      error: (error) => {
-        this.saving.set(false);
-        this.formError.set(error?.error?.error ?? 'Unable to save user.');
-      },
-    });
+    window.setTimeout(() => {
+      request.subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.closeForm();
+          if (editing) {
+            this.notifications.success('User updated', `${name} has been updated.`);
+          } else {
+            this.notifications.success('User created', `${name} now has an account.`);
+          }
+          this.refresh();
+        },
+        error: (error) => {
+          this.saving.set(false);
+          this.formError.set(error?.error?.error ?? 'Unable to save user.');
+        },
+      });
+    }, 700);
   }
 
   protected deleteUser(user: AdminUser): void {
-    const ok = window.confirm(
+    this.openConfirmModal(
+      'Delete this user?',
       `Delete ${user.name} (${user.email})? This removes their routines and scans too.`,
+      'Delete',
+      true,
+      () => {
+        this.api.deleteUser(user.id).subscribe({
+          next: () => {
+            this.notifications.success('User deleted', `${user.name} was removed.`);
+            this.refresh();
+          },
+          error: (error) => {
+            this.notifications.error('Delete failed', error?.error?.error ?? 'Unable to delete user.');
+          },
+        });
+      },
     );
+  }
 
-    if (!ok) {
+  protected confirmAction(): void {
+    if (!this.pendingConfirmAction) {
+      this.confirmModalOpen.set(false);
       return;
     }
 
-    this.api.deleteUser(user.id).subscribe({
-      next: () => {
-        this.notifications.success('User deleted', `${user.name} was removed.`);
-        this.refresh();
-      },
-      error: (error) => {
-        this.notifications.error('Delete failed', error?.error?.error ?? 'Unable to delete user.');
-      },
-    });
+    const action = this.pendingConfirmAction;
+    this.pendingConfirmAction = null;
+    this.confirmModalOpen.set(false);
+    action();
+  }
+
+  protected closeConfirmModal(): void {
+    this.confirmModalOpen.set(false);
+    this.pendingConfirmAction = null;
+  }
+
+  private openConfirmModal(title: string, message: string, actionLabel: string, danger: boolean, action: () => void): void {
+    this.confirmTitle.set(title);
+    this.confirmMessage.set(message);
+    this.confirmActionLabel.set(actionLabel);
+    this.confirmDanger.set(danger);
+    this.pendingConfirmAction = action;
+    this.confirmModalOpen.set(true);
+  }
+
+  private hasDraftChanges(): boolean {
+    return !!this.formName.trim() || !!this.formEmail.trim() || !!this.formPassword.trim() || this.formRole !== 'CUSTOMER';
   }
 
   protected roleLabel(role: UserRole): string {

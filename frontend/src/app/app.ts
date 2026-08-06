@@ -89,7 +89,7 @@ export class App {
 
         window.setTimeout(() => {
           this.closeAuth();
-          void this.router.navigateByUrl(isAdmin ? '/dashboard' : '/scan');
+          void this.router.navigateByUrl(isAdmin ? '/dashboard' : '/home');
         }, 900);
       },
       error: (error) => {

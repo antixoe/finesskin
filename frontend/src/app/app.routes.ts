@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { HomePageComponent } from './pages/home-page.component';
 import { LoginPageComponent } from './pages/login-page.component';
 import { RoutinesPageComponent } from './pages/routines-page.component';
-import { ScanPageComponent } from './pages/scan-page.component';
+import { ClientDashboardPageComponent } from './pages/client-dashboard-page.component';
 import { AdminLayoutComponent } from './pages/admin-layout.component';
 import { AdminDashboardPageComponent } from './pages/admin-dashboard-page.component';
 import { AdminUsersComponent } from './pages/admin-users.component';
@@ -17,8 +17,13 @@ export const routes: Routes = [
     component: HomePageComponent,
   },
   {
+    path: 'home',
+    component: ClientDashboardPageComponent,
+  },
+  {
     path: 'scan',
-    component: ScanPageComponent,
+    redirectTo: 'home',
+    pathMatch: 'full',
   },
   {
     path: 'login',

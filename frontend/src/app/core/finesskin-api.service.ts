@@ -1,20 +1,30 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import type {
+  DrinkLog,
+  DrinksResponse,
+  Habit,
+  HabitPayload,
+  HabitsResponse,
+  MoodEntry,
+  MoodsResponse,
   ProductPayload,
   Product,
   ProductResponse,
   Routine,
   RoutineResponse,
-  ScanResponse,
-  SkinScan,
+  TodoItem,
+  TodosResponse,
 } from './finesskin.models';
 
 type DemoStore = {
   products: Product[];
   routines: Routine[];
-  scans: SkinScan[];
+  habits: Habit[];
+  todos: TodoItem[];
+  moods: MoodEntry[];
+  drinks: DrinkLog[];
 };
 
 @Injectable({ providedIn: 'root' })
@@ -32,20 +42,6 @@ export class FinesskinApiService {
     return this.http
       .get<RoutineResponse>('/api/routines')
       .pipe(catchError(() => of({ routines: this.readStore().routines })));
-  }
-
-  getScans() {
-    return this.http
-      .get<ScanResponse>('/api/scans')
-      .pipe(catchError(() => of({ scans: this.readStore().scans })));
-  }
-
-  getDashboardData() {
-    return forkJoin({
-      products: this.getProducts(),
-      routines: this.getRoutines(),
-      scans: this.getScans(),
-    });
   }
 
   createProduct(payload: ProductPayload) {
@@ -196,20 +192,200 @@ export class FinesskinApiService {
       );
   }
 
-  createScan(payload: Omit<SkinScan, 'id' | 'createdAt'>) {
-    return this.http.post('/api/scans', payload).pipe(
+  // ---- Client dashboard: habits ----
+
+  getHabits() {
+    return this.http
+      .get<HabitsResponse>('/api/habits')
+      .pipe(
+        map((response) => ({
+          habits: response.habits.map((habit) => this.normalizeHabit(habit)),
+        })),
+        catchError(() => of({ habits: this.readStore().habits.map((habit) => this.normalizeHabit(habit)) })),
+      );
+  }
+
+  createHabit(payload: HabitPayload) {
+    return this.http
+      .post<{ habit: Habit }>('/api/habits', payload)
+      .pipe(
+        map((response) => ({ habit: this.normalizeHabit(response.habit) })),
+        catchError(() => {
+          const store = this.readStore();
+          const habit: Habit = {
+            id: this.makeId('habit'),
+            title: payload.title,
+            emoji: payload.emoji,
+            scheduleType: payload.scheduleType,
+            weekdays: payload.weekdays,
+            dates: payload.dates,
+            note: payload.note,
+            createdAt: new Date().toISOString(),
+            logs: [],
+          };
+          store.habits = [...store.habits, habit];
+          this.writeStore(store);
+          return of({ habit });
+        }),
+      );
+  }
+
+  deleteHabit(id: string) {
+    return this.http.delete(`/api/habits/${id}`).pipe(
       catchError(() => {
         const store = this.readStore();
-        const scan: SkinScan = {
-          id: this.makeId('scan'),
-          createdAt: new Date().toISOString(),
-          ...payload,
-        };
-        store.scans = [scan, ...store.scans];
+        store.habits = store.habits.filter((habit) => habit.id !== id);
         this.writeStore(store);
-        return of(scan);
+        return of({ ok: true });
       }),
     );
+  }
+
+  setHabitLog(habitId: string, date: string, done: boolean) {
+    return this.http
+      .patch<{ log: { id: string; date: string; done: boolean } | null }>(
+        `/api/habits/${habitId}`,
+        { date, done },
+      )
+      .pipe(
+        catchError(() => {
+          const store = this.readStore();
+          store.habits = store.habits.map((habit) => {
+            if (habit.id !== habitId) {
+              return habit;
+            }
+
+            const logs = done
+              ? [
+                  ...habit.logs.filter((log) => log.date !== date),
+                  { id: this.makeId('habit-log'), date, done: true },
+                ]
+              : habit.logs.filter((log) => log.date !== date);
+
+            return { ...habit, logs };
+          });
+          this.writeStore(store);
+          return of({ log: null });
+        }),
+      );
+  }
+
+  // ---- Client dashboard: to-dos ----
+
+  getTodos() {
+    return this.http
+      .get<TodosResponse>('/api/todos')
+      .pipe(catchError(() => of({ todos: this.readStore().todos })));
+  }
+
+  createTodo(title: string) {
+    return this.http
+      .post<{ todo: TodoItem }>('/api/todos', { title })
+      .pipe(
+        catchError(() => {
+          const store = this.readStore();
+          const todo: TodoItem = {
+            id: this.makeId('todo'),
+            title,
+            done: false,
+            createdAt: new Date().toISOString(),
+          };
+          store.todos = [todo, ...store.todos];
+          this.writeStore(store);
+          return of({ todo });
+        }),
+      );
+  }
+
+  updateTodo(id: string, patch: Partial<Pick<TodoItem, 'title' | 'done'>>) {
+    return this.http
+      .patch<{ todo: TodoItem }>(`/api/todos/${id}`, patch)
+      .pipe(
+        catchError(() => {
+          const store = this.readStore();
+          store.todos = store.todos.map((todo) =>
+            todo.id === id ? { ...todo, ...patch } : todo,
+          );
+          this.writeStore(store);
+          return of({ todo: store.todos.find((todo) => todo.id === id) ?? ({} as TodoItem) });
+        }),
+      );
+  }
+
+  deleteTodo(id: string) {
+    return this.http.delete(`/api/todos/${id}`).pipe(
+      catchError(() => {
+        const store = this.readStore();
+        store.todos = store.todos.filter((todo) => todo.id !== id);
+        this.writeStore(store);
+        return of({ ok: true });
+      }),
+    );
+  }
+
+  // ---- Client dashboard: moods ----
+
+  getMoods() {
+    return this.http
+      .get<MoodsResponse>('/api/moods')
+      .pipe(catchError(() => of({ moods: this.readStore().moods })));
+  }
+
+  setMood(date: string, mood: string, note: string | null) {
+    return this.http
+      .put<{ mood: MoodEntry }>('/api/moods', { date, mood, note })
+      .pipe(
+        catchError(() => {
+          const store = this.readStore();
+          store.moods = [
+            ...store.moods.filter((entry) => entry.date !== date),
+            { id: this.makeId('mood'), date, mood, note },
+          ];
+          this.writeStore(store);
+          return of({ mood: store.moods.find((entry) => entry.date === date) ?? ({} as MoodEntry) });
+        }),
+      );
+  }
+
+  // ---- Client dashboard: drinks ----
+
+  getDrinks() {
+    return this.http
+      .get<DrinksResponse>('/api/drinks')
+      .pipe(catchError(() => of({ drinks: this.readStore().drinks })));
+  }
+
+  setDrinks(date: string, glasses: number) {
+    return this.http
+      .put<{ drink: DrinkLog }>('/api/drinks', { date, glasses })
+      .pipe(
+        catchError(() => {
+          const store = this.readStore();
+          store.drinks = [
+            ...store.drinks.filter((entry) => entry.date !== date),
+            { id: this.makeId('drink'), date, glasses },
+          ];
+          this.writeStore(store);
+          return of({ drink: store.drinks.find((entry) => entry.date === date) ?? ({} as DrinkLog) });
+        }),
+      );
+  }
+
+  private normalizeHabit(habit: Habit): Habit {
+    const scheduleType =
+      habit.scheduleType === 'weekly' || habit.scheduleType === 'dates'
+        ? habit.scheduleType
+        : 'daily';
+
+    return {
+      ...habit,
+      scheduleType,
+      weekdays: Array.isArray(habit.weekdays)
+        ? habit.weekdays.map(Number).filter((day) => Number.isInteger(day))
+        : [],
+      dates: Array.isArray(habit.dates) ? habit.dates.map(String) : [],
+      note: habit.note ?? null,
+    };
   }
 
   private readStore(): DemoStore {
@@ -376,32 +552,10 @@ export class FinesskinApiService {
           ],
         },
       ],
-      scans: [
-        {
-          id: 'scan-demo-1',
-          source: 'UPLOAD',
-          imageLabel: 'demo-scan.jpg',
-          score: 78,
-          hydration: 74,
-          redness: 22,
-          acne: 28,
-          barrier: 81,
-          summary: 'Skin looks fairly balanced with mild redness and a strong barrier trend.',
-          recommendations: [
-            {
-              title: 'Keep barrier support consistent',
-              detail: 'Use a moisturizer that reinforces lipids after cleansing.',
-              priority: 'high',
-            },
-            {
-              title: 'Watch congestion zones',
-              detail: 'Use lighter layers on acne-prone areas to avoid buildup.',
-              priority: 'medium',
-            },
-          ],
-          createdAt: now,
-        },
-      ],
+      habits: [],
+      todos: [],
+      moods: [],
+      drinks: [],
     };
   }
 

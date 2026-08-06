@@ -13,11 +13,12 @@ import { AuthModalService } from '../core/auth-modal.service';
       <h1 class="headline-lg">Sign in to your account</h1>
       <p class="lead-copy">
         Use the account button in the navigation to sign in. Admins get access
-        to the platform dashboard, while customers land in the demo scan studio.
+        to the platform dashboard, while customers land on their personal
+        dashboard with habits, to-dos, mood, and water tracking.
       </p>
       <div class="button-row">
         <a routerLink="/" class="btn btn--secondary">Back to Home</a>
-        <a routerLink="/scan" class="btn btn--primary">Open Demo Area</a>
+        <a routerLink="/home" class="btn btn--primary">Open My Dashboard</a>
       </div>
     </section>
   `,

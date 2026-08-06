@@ -4,13 +4,18 @@ import { defineConfig, env } from "prisma/config";
 loadEnv({ path: ".env.local" });
 loadEnv();
 
+const databaseUrl = env("DATABASE_URL");
+const isPostgres = databaseUrl.startsWith("postgresql://");
+
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: isPostgres
+    ? "prisma/schema.postgres.prisma"
+    : "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: databaseUrl,
   },
 });

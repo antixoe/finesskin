@@ -1,77 +1,110 @@
-<section class="admin-dashboard-hero">
-  <p class="section-label">Admin dashboard</p>
-  <h1 class="headline-lg">Hi, {{ authService.user()?.name }}</h1>
-  <p class="lead-copy">
-    Here is a live snapshot of the Finesskin workspace: members, roles,
-    routines, skin scans, and completion activity.
-  </p>
-</section>
-
-<section class="admin-dashboard-strip" *ngIf="loading()">
-  <p class="card-copy">Loading platform stats...</p>
-</section>
-
-<section class="admin-dashboard-strip" *ngIf="error()">
-  <p class="card-copy auth-error">{{ error() }}</p>
-</section>
-
-<section class="admin-dashboard" *ngIf="stats() as stats">
-  <section class="admin-dashboard-strip">
-    <div class="admin-metric-list">
-      <article class="admin-metric-row">
-        <span class="admin-metric-row__icon admin-icon admin-icon--users" aria-hidden="true"></span>
-        <div>
-          <div class="muted-sm">Registered users</div>
-          <div class="big-number">{{ stats.users }}</div>
-          <p class="card-copy">Accounts on the platform</p>
-        </div>
-      </article>
-      <article class="admin-metric-row">
-        <span class="admin-metric-row__icon admin-icon admin-icon--roles" aria-hidden="true"></span>
-        <div>
-          <div class="muted-sm">Role types</div>
-          <div class="big-number">3</div>
-          <p class="card-copy">Super admin, admin, and customer access levels</p>
-        </div>
-      </article>
-      <article class="admin-metric-row">
-        <span class="admin-metric-row__icon admin-icon admin-icon--routines" aria-hidden="true"></span>
-        <div>
-          <div class="muted-sm">Routines</div>
-          <div class="big-number">{{ stats.routines }}</div>
-          <p class="card-copy">AM and PM care plans being tracked</p>
-        </div>
-      </article>
-      <article class="admin-metric-row">
-        <span class="admin-metric-row__icon admin-icon admin-icon--scans" aria-hidden="true"></span>
-        <div>
-          <div class="muted-sm">Scans</div>
-          <div class="big-number">{{ stats.scans }}</div>
-          <p class="card-copy">Skin analyses recorded</p>
-        </div>
-      </article>
-      <article class="admin-metric-row">
-        <span class="admin-metric-row__icon admin-icon admin-icon--overview" aria-hidden="true"></span>
-        <div>
-          <div class="muted-sm">Completions</div>
-          <div class="big-number">{{ stats.completions }}</div>
-          <p class="card-copy">Routine completion events logged</p>
-        </div>
-      </article>
-    </div>
+<section class="admin-dash">
+  <!-- Loading state -->
+  <section class="admin-panel" *ngIf="loading()">
+    <p class="admin-loading">Loading platform stats...</p>
   </section>
 
-  <section class="admin-dashboard-strip admin-dashboard-strip--actions">
-    <div>
-      <p class="section-label">Quick actions</p>
-      <h2 class="section-title section-title--sm">Manage platform progress</h2>
-    </div>
-    <div class="tag-row">
-      <a *ngIf="authService.hasPermission('USERS')" routerLink="/dashboard/users" class="btn btn--secondary">Manage Users</a>
-      <a *ngIf="authService.hasPermission('ROLES')" routerLink="/dashboard/roles" class="btn btn--secondary">Manage Roles</a>
-      <a *ngIf="authService.hasPermission('ROUTINES')" routerLink="/dashboard/routines" class="btn btn--secondary">Manage Routines</a>
-      <a *ngIf="authService.hasPermission('SCANS')" routerLink="/dashboard/scans" class="btn btn--secondary">View Scans</a>
-      <a *ngIf="authService.hasPermission('SETTINGS')" routerLink="/dashboard/settings" class="btn btn--secondary">Settings</a>
-    </div>
+  <!-- Error state -->
+  <section class="admin-panel" *ngIf="error()">
+    <p class="admin-loading admin-dash-error">{{ error() }}</p>
   </section>
+
+  <!-- Stats + quick actions -->
+  <ng-container *ngIf="stats() as stats">
+    <section class="admin-dash-section">
+      <div class="admin-dash-section__head">
+        <div>
+          <p class="section-label">Platform overview</p>
+          <h2 class="admin-dash-section__title">Workspace at a glance</h2>
+        </div>
+        <p class="admin-dash-section__note">Live counts across the workspace</p>
+      </div>
+
+      <div class="admin-stat-grid">
+        <article class="admin-stat-card admin-stat-card--users">
+          <span class="admin-stat-card__icon" aria-hidden="true"><i class="bi bi-people-fill"></i></span>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__label">Registered users</span>
+            <strong class="admin-stat-card__value">{{ stats.users }}</strong>
+            <span class="admin-stat-card__hint">Accounts on the platform</span>
+          </div>
+        </article>
+
+        <article class="admin-stat-card admin-stat-card--roles">
+          <span class="admin-stat-card__icon" aria-hidden="true"><i class="bi bi-shield-lock-fill"></i></span>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__label">Role types</span>
+            <strong class="admin-stat-card__value">3</strong>
+            <span class="admin-stat-card__hint">Super admin, admin &amp; customer</span>
+          </div>
+        </article>
+
+        <article class="admin-stat-card admin-stat-card--routines">
+          <span class="admin-stat-card__icon" aria-hidden="true"><i class="bi bi-calendar2-week-fill"></i></span>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__label">Routines</span>
+            <strong class="admin-stat-card__value">{{ stats.routines }}</strong>
+            <span class="admin-stat-card__hint">AM &amp; PM care plans tracked</span>
+          </div>
+        </article>
+
+        <article class="admin-stat-card admin-stat-card--scans">
+          <span class="admin-stat-card__icon" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__label">Scans</span>
+            <strong class="admin-stat-card__value">{{ stats.scans }}</strong>
+            <span class="admin-stat-card__hint">Skin analyses recorded</span>
+          </div>
+        </article>
+
+        <article class="admin-stat-card admin-stat-card--overview">
+          <span class="admin-stat-card__icon" aria-hidden="true"><i class="bi bi-check2-circle-fill"></i></span>
+          <div class="admin-stat-card__body">
+            <span class="admin-stat-card__label">Completions</span>
+            <strong class="admin-stat-card__value">{{ stats.completions }}</strong>
+            <span class="admin-stat-card__hint">Routine completions logged</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-dash-section">
+      <div class="admin-quick-grid">
+        <a *ngIf="authService.hasPermission('USERS')" routerLink="/dashboard/users" class="admin-quick-card">
+          <span class="admin-quick-card__icon" aria-hidden="true"><i class="bi bi-people-fill"></i></span>
+          <span class="admin-quick-card__title">Manage Users</span>
+          <span class="admin-quick-card__hint">Review members, roles and access</span>
+          <span class="admin-quick-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a *ngIf="authService.hasPermission('ROLES')" routerLink="/dashboard/roles" class="admin-quick-card">
+          <span class="admin-quick-card__icon" aria-hidden="true"><i class="bi bi-shield-lock-fill"></i></span>
+          <span class="admin-quick-card__title">Manage Roles</span>
+          <span class="admin-quick-card__hint">Assign permissions per role</span>
+          <span class="admin-quick-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a *ngIf="authService.hasPermission('ROUTINES')" routerLink="/dashboard/routines" class="admin-quick-card">
+          <span class="admin-quick-card__icon" aria-hidden="true"><i class="bi bi-calendar2-week-fill"></i></span>
+          <span class="admin-quick-card__title">Manage Routines</span>
+          <span class="admin-quick-card__hint">Monitor every care plan</span>
+          <span class="admin-quick-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a *ngIf="authService.hasPermission('SCANS')" routerLink="/dashboard/scans" class="admin-quick-card">
+          <span class="admin-quick-card__icon" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
+          <span class="admin-quick-card__title">View Scans</span>
+          <span class="admin-quick-card__hint">Inspect all skin analyses</span>
+          <span class="admin-quick-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+
+        <a *ngIf="authService.hasPermission('SETTINGS')" routerLink="/dashboard/settings" class="admin-quick-card">
+          <span class="admin-quick-card__icon" aria-hidden="true"><i class="bi bi-gear-fill"></i></span>
+          <span class="admin-quick-card__title">Settings</span>
+          <span class="admin-quick-card__hint">Platform name, signups, maintenance</span>
+          <span class="admin-quick-card__arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </section>
+  </ng-container>
 </section>

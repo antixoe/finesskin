@@ -16,6 +16,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
   padding-block: 1rem;
 }
 
@@ -64,6 +65,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  flex-wrap: wrap;
   padding: 0.35rem;
   border: 1px solid #dbeafe;
   border-radius: 999px;

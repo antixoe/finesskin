@@ -9,6 +9,7 @@ import type { AdminStats } from '../core/finesskin.models';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './admin-dashboard-page.component.html',
+  styleUrl: './admin-pages.css',
 })
 export class AdminDashboardPageComponent implements OnInit {
   protected readonly authService = inject(AuthService);

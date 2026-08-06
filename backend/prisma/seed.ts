@@ -273,6 +273,113 @@ async function main() {
     ],
   });
 
+  await prisma.$transaction([
+    prisma.habit.deleteMany({
+      where: { userId: user.id },
+    }),
+    prisma.todoItem.deleteMany({
+      where: { userId: user.id },
+    }),
+    prisma.moodEntry.deleteMany({
+      where: { userId: user.id },
+    }),
+    prisma.drinkLog.deleteMany({
+      where: { userId: user.id },
+    }),
+  ]);
+
+  const today = new Date();
+  const dateKey = (offset: number): string => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + offset);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const [waterHabit, sunscreenHabit, sleepHabit, maskHabit, checkinHabit] = await Promise.all([
+    prisma.habit.create({
+      data: {
+        userId: user.id,
+        title: "Drink 8 glasses of water",
+        emoji: "💧",
+        scheduleType: "daily",
+      },
+    }),
+    prisma.habit.create({
+      data: {
+        userId: user.id,
+        title: "Apply sunscreen",
+        emoji: "🌞",
+        scheduleType: "daily",
+      },
+    }),
+    prisma.habit.create({
+      data: {
+        userId: user.id,
+        title: "Sleep 8 hours",
+        emoji: "😴",
+        scheduleType: "daily",
+      },
+    }),
+    prisma.habit.create({
+      data: {
+        userId: user.id,
+        title: "Weekly face mask",
+        emoji: "🧴",
+        scheduleType: "weekly",
+        weekdays: [0, 6],
+        note: "Deep moisture mask on weekends.",
+      },
+    }),
+    prisma.habit.create({
+      data: {
+        userId: user.id,
+        title: "Skincare check-in",
+        emoji: "💊",
+        scheduleType: "dates",
+        dates: [dateKey(0), dateKey(2), dateKey(5)],
+        note: "Quick progress review on these dates.",
+      },
+    }),
+  ]);
+
+  await prisma.habitLog.createMany({
+    data: [
+      { habitId: waterHabit.id, date: dateKey(0), done: true },
+      { habitId: waterHabit.id, date: dateKey(-1), done: true },
+      { habitId: sunscreenHabit.id, date: dateKey(0), done: true },
+      { habitId: sunscreenHabit.id, date: dateKey(-1), done: true },
+      { habitId: sleepHabit.id, date: dateKey(-1), done: true },
+    ],
+  });
+
+  await prisma.todoItem.createMany({
+    data: [
+      { userId: user.id, title: "Moisturize before bed", done: true },
+      { userId: user.id, title: "Book a follow-up skin scan", done: false },
+      { userId: user.id, title: "Reorder hydrating serum", done: false },
+    ],
+  });
+
+  await prisma.moodEntry.create({
+    data: {
+      userId: user.id,
+      date: dateKey(0),
+      mood: "good",
+      note: "Skin feels calm and hydrated today.",
+    },
+  });
+
+  await prisma.drinkLog.create({
+    data: {
+      userId: user.id,
+      date: dateKey(0),
+      glasses: 5,
+    },
+  });
+
   const settings: Array<[string, string]> = [
     ["platformName", "Finesskin"],
     ["platformTagline", "Soft skin intelligence"],

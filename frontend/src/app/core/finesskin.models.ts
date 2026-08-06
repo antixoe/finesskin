@@ -96,6 +96,73 @@ export interface SkinScan {
   createdAt: string;
 }
 
+// ---- Client dashboard models ----
+
+export interface HabitLog {
+  id: string;
+  date: string;
+  done: boolean;
+}
+
+export type HabitScheduleType = 'daily' | 'weekly' | 'dates';
+
+export interface Habit {
+  id: string;
+  title: string;
+  emoji: string;
+  scheduleType: HabitScheduleType;
+  weekdays: number[];
+  dates: string[];
+  note: string | null;
+  createdAt: string;
+  logs: HabitLog[];
+}
+
+export interface HabitPayload {
+  title: string;
+  emoji: string;
+  scheduleType: HabitScheduleType;
+  weekdays: number[];
+  dates: string[];
+  note: string | null;
+}
+
+export interface TodoItem {
+  id: string;
+  title: string;
+  done: boolean;
+  createdAt: string;
+}
+
+export interface MoodEntry {
+  id: string;
+  date: string;
+  mood: string;
+  note: string | null;
+}
+
+export interface DrinkLog {
+  id: string;
+  date: string;
+  glasses: number;
+}
+
+export interface HabitsResponse {
+  habits: Habit[];
+}
+
+export interface TodosResponse {
+  todos: TodoItem[];
+}
+
+export interface MoodsResponse {
+  moods: MoodEntry[];
+}
+
+export interface DrinksResponse {
+  drinks: DrinkLog[];
+}
+
 export interface ProductResponse {
   products: Product[];
 }

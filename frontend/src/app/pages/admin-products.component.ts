@@ -157,5 +157,5 @@ export class AdminProductsComponent implements OnInit {
     this.api.getProducts().subscribe((products) => this.products.set(products));
   }
 
-  protected readonly categoryLabel = productCategoryLabel;
+  protected readonly categoryLabel = (category: ProductCategory): string => productCategoryLabel[category];
 }

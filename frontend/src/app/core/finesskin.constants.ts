@@ -1,5 +1,4 @@
 import type {
-  AnalysisResult,
   ProductCategory,
   RoutineTiming,
   ScanSource,
@@ -36,7 +35,6 @@ export const productCategoryOptions: ProductCategory[] = [
 ];
 
 export const routineTimingOptions: RoutineTiming[] = ['AM', 'PM'];
-export const scanSourceOptions: ScanSource[] = ['UPLOAD', 'CAMERA'];
 
 export const featureCards = [
   {
@@ -65,15 +63,38 @@ export const featureCards = [
   },
 ];
 
-export const skinMetricCards: Array<{
-  key: keyof Pick<AnalysisResult, 'hydration' | 'redness' | 'acne' | 'barrier'>;
-  label: string;
-}> = [
-  { key: 'hydration', label: 'Hydration' },
-  { key: 'redness', label: 'Redness / Sensitivity' },
-  { key: 'acne', label: 'Acne / Blemishes' },
-  { key: 'barrier', label: 'Barrier Health' },
-];
+export const waterGoalGlasses = 8;
+
+export const habitEmojiOptions = [
+  '💧',
+  '🌞',
+  '😴',
+  '🧴',
+  '🏃',
+  '🥗',
+  '📖',
+  '🧘',
+  '💊',
+  '🪞',
+] as const;
+
+export const moodOptions = [
+  { value: 'great', emoji: '😄', label: 'Great' },
+  { value: 'good', emoji: '🙂', label: 'Good' },
+  { value: 'okay', emoji: '😐', label: 'Okay' },
+  { value: 'low', emoji: '😕', label: 'Low' },
+  { value: 'bad', emoji: '😔', label: 'Bad' },
+] as const;
+
+export const weekdayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'] as const;
+
+export const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
+
+export const habitScheduleOptions = [
+  { value: 'daily', label: 'Every day', description: 'Shows up in your dashboard every single day.' },
+  { value: 'weekly', label: 'Specific weekdays', description: 'Only on the days of the week you pick.' },
+  { value: 'dates', label: 'Specific dates', description: 'Only on the exact dates you choose.' },
+] as const;
 
 export const skinGoals = [
   {

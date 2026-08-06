@@ -1,39 +1,48 @@
 <div class="app-shell">
   <header class="site-header-shell">
     <div class="site-header">
-      <a routerLink="/" class="brand">
-        <span class="brand__script">Finesskin</span>
-        <span class="brand__caption">Soft skin intelligence</span>
-      </a>
+      <div class="site-header__inner">
+        <a routerLink="/" class="brand">
+          <span class="brand__script">Finesskin</span>
+          <span class="brand__caption">Soft skin intelligence</span>
+        </a>
 
-      <nav class="site-nav">
-        <ng-container *ngIf="authService.isAdmin(); else marketingNav">
-          <a routerLink="/dashboard" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
-            Dashboard
-          </a>
-          <a routerLink="/scan" routerLinkActive="is-active">Skin Scan</a>
-          <a routerLink="/routines" routerLinkActive="is-active">Routines</a>
+        <nav class="site-nav">
+          <ng-container *ngIf="authService.isAuthenticated(); else marketingNav">
+            <ng-container *ngIf="authService.isAdmin(); else customerNav">
+              <a routerLink="/dashboard" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+                Dashboard
+              </a>
+              <a routerLink="/routines" routerLinkActive="is-active">Routines</a>
+            </ng-container>
+            <ng-template #customerNav>
+              <a routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+                My Dashboard
+              </a>
+              <a routerLink="/routines" routerLinkActive="is-active">Routines</a>
+            </ng-template>
+          </ng-container>
+          <ng-template #marketingNav>
+            <a href="/#home">Home</a>
+            <a href="/#about">About</a>
+            <a href="/#collection">How It Works</a>
+            <a href="/#contact">Contact</a>
+          </ng-template>
+        </nav>
+
+        <ng-container *ngIf="authService.user() as user; else signInButton">
+          <div class="site-account">
+            <span class="site-account__name">Hi, {{ user.name }}</span>
+            <span class="site-account__role" *ngIf="user.role === 'ADMIN'">Admin</span>
+            <button type="button" class="site-logout" (click)="signOut()">Sign out</button>
+          </div>
         </ng-container>
-        <ng-template #marketingNav>
-          <a href="/#home">Home</a>
-          <a href="/#about">About</a>
-          <a href="/#collection">How It Works</a>
-          <a href="/#contact">Contact</a>
+        <ng-template #signInButton>
+          <button type="button" class="site-login" (click)="openAuth('signin')">
+            Sign In / Sign Up
+          </button>
         </ng-template>
-      </nav>
-
-      <ng-container *ngIf="authService.user() as user; else signInButton">
-        <div class="site-account">
-          <span class="site-account__name">{{ user.name }}</span>
-          <span class="site-account__role" *ngIf="user.role === 'ADMIN'">Admin</span>
-          <button type="button" class="site-logout" (click)="signOut()">Sign out</button>
-        </div>
-      </ng-container>
-      <ng-template #signInButton>
-        <button type="button" class="site-login" (click)="openAuth('signin')">
-          Sign In / Sign Up
-        </button>
-      </ng-template>
+      </div>
     </div>
   </header>
 
