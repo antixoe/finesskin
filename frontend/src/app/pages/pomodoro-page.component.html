@@ -1,0 +1,30 @@
+<main class="pomodoro-page" [class.pomodoro-page--custom-background]="!!backgroundImage" [style.--custom-pomodoro-background]="backgroundImage ? 'url(' + backgroundImage + ')' : 'none'">
+  <div class="pomodoro-cozy-background" aria-hidden="true"><span class="cozy-orb cozy-orb--one"></span><span class="cozy-orb cozy-orb--two"></span><span class="cozy-star cozy-star--one">✦</span><span class="cozy-star cozy-star--two">✧</span><span class="cozy-cloud cozy-cloud--one">☁</span><span class="cozy-cloud cozy-cloud--two">☁</span></div>
+
+  <header class="pomodoro-header">
+    <div><h1>Pomodoro time</h1><p>One gentle focus moment at a time.</p></div>
+    <div class="pomodoro-header-actions"><div class="pomodoro-rounds">🌸 <strong>{{ completedRounds }}</strong><span>rounds completed</span></div><button class="pomo-settings-trigger" type="button" (click)="openSettings()"><i class="bi bi-sliders2"></i><span>Timer settings</span></button></div>
+  </header>
+
+  <section class="pomodoro-layout">
+    <article class="pomodoro-clock-card">
+      <div class="pomodoro-mode"><span class="pomodoro-mode__dot"></span>{{ modeLabel }}</div>
+      <div class="pomodoro-clock" [style.--timer-progress.%]="progress"><div class="pomodoro-clock__face"><span class="pomodoro-clock__hands">♡</span><strong>{{ formattedTime }}</strong><small>{{ message }}</small></div></div>
+      <div class="pomodoro-character" aria-hidden="true"><span class="pomodoro-sparkle">✦</span><span class="pomodoro-cloud">☁</span></div>
+      <div class="pomodoro-actions"><button class="pomodoro-btn pomodoro-btn--main" type="button" (click)="toggleTimer()"><span>{{ running ? 'Ⅱ' : '▶' }}</span>{{ running ? 'Pause' : 'Start focus' }}</button><button class="pomodoro-btn" type="button" (click)="resetTimer()"><span>↻</span> Reset</button><button class="pomodoro-btn" type="button" (click)="skipMode()"><span>»</span> Skip</button></div>
+      <button class="pomo-mobile-settings" type="button" (click)="openSettings()"><i class="bi bi-sliders2"></i> Customize timer</button>
+    </article>
+  </section>
+
+  <div class="pomo-settings-backdrop" *ngIf="showSettings" (click)="closeSettings()">
+    <section class="pomo-settings-modal" role="dialog" aria-modal="true" aria-labelledby="pomo-settings-title" (click)="$event.stopPropagation()">
+      <header class="pomo-settings-modal__header"><div><p class="section-label">Your focus space</p><h2 id="pomo-settings-title">Timer settings</h2></div><button type="button" class="pomo-settings-close" (click)="closeSettings()" aria-label="Close timer settings">&times;</button></header>
+      <div class="pomo-settings-grid">
+        <section class="pomodoro-panel"><p class="section-label">Timer setup</p><h3>Choose your rhythm</h3><div class="pomodoro-fields"><label>Focus minutes<input type="number" min="1" max="120" [(ngModel)]="workMinutes"></label><label>Break minutes<input type="number" min="1" max="60" [(ngModel)]="breakMinutes"></label></div><button class="pomodoro-save" type="button" (click)="saveSettings()">Save timer</button></section>
+        <section class="pomodoro-panel"><p class="section-label">Background</p><h3>Make it yours</h3><label class="pomodoro-upload"><i class="bi bi-camera-fill"></i> Add your photo<input type="file" accept="image/*" (change)="chooseBackground($event)"></label><button *ngIf="backgroundImage" class="pomodoro-tool-button" type="button" (click)="clearBackground()">Remove photo</button></section>
+        <section class="pomodoro-panel pomodoro-music"><p class="section-label">Cozy soundtrack</p><h3>Pomodoro music</h3><label class="pomodoro-toggle"><input type="checkbox" [(ngModel)]="musicEnabled"><span>Use my music</span></label><input class="pomodoro-url" type="url" placeholder="https://.../focus-song.mp3" [(ngModel)]="musicUrl"><audio *ngIf="musicEnabled && musicUrl" controls [src]="musicUrl"></audio></section>
+        <section class="pomodoro-panel"><p class="section-label">Notifications</p><h3>Stay gently informed</h3><p class="pomo-settings-copy">Get a browser notification and a soft chime when a session ends.</p><button class="pomodoro-notify" type="button" (click)="requestNotifications()"><i class="bi bi-bell-fill"></i> Allow notifications</button></section>
+      </div>
+    </section>
+  </div>
+</main>

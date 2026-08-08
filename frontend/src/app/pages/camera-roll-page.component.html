@@ -1,0 +1,23 @@
+<main class="gallery-page">
+  <header class="gallery-header"><div><p>A cozy feed of the little changes you are making for yourself.</p></div><span class="gallery-count"><i class="bi bi-camera-fill"></i> {{ photoRoll.photos().length }} moments</span></header>
+
+  <section class="gallery-empty" *ngIf="!photoRoll.photos().length"><i class="bi bi-camera-fill"></i><h2>Your progress album is ready</h2><p>Tap the camera beside a habit or to-do to save your first moment here.</p></section>
+
+  <nav class="gallery-mini-nav" *ngIf="photoRoll.photos().length" aria-label="Filter progress photos">
+    <button type="button" [class.is-active]="galleryCategory === 'all'" (click)="setGalleryCategory('all')"><i class="bi bi-grid-3x3-gap-fill"></i><span>All photos</span><small>{{ photoRoll.photos().length }}</small></button>
+    <button type="button" [class.is-active]="galleryCategory === 'habit'" (click)="setGalleryCategory('habit')"><i class="bi bi-check2-circle"></i><span>Habits</span><small>{{ countByType('habit') }}</small></button>
+    <button type="button" [class.is-active]="galleryCategory === 'todo'" (click)="setGalleryCategory('todo')"><i class="bi bi-list-check"></i><span>To-do list</span><small>{{ countByType('todo') }}</small></button>
+  </nav>
+
+  <section class="gallery-filter-empty" *ngIf="photoRoll.photos().length && !filteredPhotos.length"><i class="bi bi-camera"></i><p>No photos in this category yet.</p></section>
+
+  <section class="gallery-feed" *ngIf="filteredPhotos.length">
+    <article class="gallery-post" *ngFor="let photo of filteredPhotos" (click)="openDetail(photo)">
+      <div class="gallery-post__top"><span><i class="bi bi-camera-fill"></i> {{ photo.targetType | titlecase }}</span><time>{{ photo.createdAt | date:'medium' }}</time></div>
+      <img [src]="photo.dataUrl" [alt]="'Progress photo for ' + photo.targetTitle" />
+      <div class="gallery-post__body"><strong>{{ photo.targetTitle }}</strong><p>{{ photo.caption || 'A little progress is still progress. ♡' }}</p><button type="button" class="gallery-post__detail" (click)="$event.stopPropagation(); openDetail(photo)">View details</button></div>
+    </article>
+  </section>
+
+  <div class="gallery-modal-backdrop" *ngIf="selectedPhoto" (click)="closeDetail()"><section class="gallery-modal" (click)="$event.stopPropagation()"><button type="button" class="gallery-modal__close" (click)="closeDetail()" aria-label="Close photo details">&times;</button><img [src]="selectedPhoto.dataUrl" [alt]="selectedPhoto.targetTitle" /><div class="gallery-modal__body"><span class="section-label"><i class="bi bi-camera-fill"></i> {{ selectedPhoto.targetType | titlecase }} progress</span><h2>{{ selectedPhoto.targetTitle }}</h2><p class="gallery-modal__date"><i class="bi bi-calendar3"></i> {{ selectedPhoto.createdAt | date:'fullDate' }} · {{ selectedPhoto.createdAt | date:'shortTime' }}</p><label>Caption<textarea [(ngModel)]="caption" rows="3" placeholder="Write something kind about this moment..."></textarea></label><div class="gallery-modal__actions"><button type="button" class="gallery-primary" (click)="saveCaption()">Save caption</button><button type="button" class="gallery-danger" (click)="removePhoto(selectedPhoto.id)">Remove photo</button></div></div></section></div>
+</main>

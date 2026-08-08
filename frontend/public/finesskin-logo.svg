@@ -1,0 +1,18 @@
+<svg width="760" height="160" viewBox="0 0 760 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="finesskin-accent" x1="20" y1="20" x2="140" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1AAFFF"/>
+      <stop offset="1" stop-color="#8EDFFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="14" y="14" width="132" height="132" rx="38" fill="url(#finesskin-accent)"/>
+  <rect x="27" y="27" width="106" height="106" rx="30" stroke="white" stroke-opacity="0.34" stroke-width="2"/>
+  <path d="M54 108V52H109V64H68.2V77.2H104.4V89H68.2V108H54Z" fill="white"/>
+  <path d="M184.294 109V50.8H223.908V61.996H198.308V75.608H221.068V86.58H198.308V109H184.294Z" fill="#0F172A"/>
+  <path d="M231.741 109V50.8H282.745V61.996H245.755V74.3H279.721V85.048H245.755V97.804H283.193V109H231.741Z" fill="#0F172A"/>
+  <path d="M293.849 109V50.8H307.863V97.58H336.083V109H293.849Z" fill="#0F172A"/>
+  <path d="M344.776 109V50.8H358.79V109H344.776Z" fill="#0F172A"/>
+  <path d="M370.677 109V50.8H382.657L412.893 87.79V50.8H426.683V109H414.815L384.467 72.01V109H370.677Z" fill="#0F172A"/>
+  <path d="M439.104 109V50.8H453.118V109H439.104Z" fill="#0F172A"/>
+  <path d="M465.005 109V50.8H479.019V75.272L504.947 50.8H523.987L494.199 78.96L526.339 109H506.179L479.019 83.288V109H465.005Z" fill="#0F172A"/>
+</svg>

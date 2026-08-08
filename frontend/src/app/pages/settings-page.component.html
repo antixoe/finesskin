@@ -1,0 +1,39 @@
+<main class="prefs-page">
+  <aside class="prefs-sidebar" aria-label="Settings sections">
+    <p>Settings</p>
+    <a href="#prefs-personal">Personal info</a>
+    <a href="#prefs-appearance">Appearance</a>
+    <a href="#prefs-daily">Daily experience</a>
+    <a href="#prefs-privacy">Privacy</a>
+    <a href="#prefs-local">Local data</a>
+  </aside>
+
+  <div class="prefs-content">
+    <section id="prefs-personal" class="prefs-section">
+      <div class="prefs-section__heading"><div><span>01</span><h2>Personal info</h2><p>Update the details used on this device.</p></div></div>
+      <div class="prefs-form-grid"><label>Display name<input class="prefs-input" type="text" [(ngModel)]="displayName" placeholder="Your name"></label><label>Email<input class="prefs-input" type="email" [(ngModel)]="accountEmail" placeholder="you@example.com"></label><label>Language<select class="prefs-input" [(ngModel)]="language"><option *ngFor="let option of languages" [value]="option.value">{{ option.label }}</option></select><small>Saved as your Finesskin language preference.</small></label><div class="prefs-form-button"><button class="prefs-primary" type="button" (click)="savePersonalInfo()">Save personal info</button></div></div>
+    </section>
+
+    <section id="prefs-appearance" class="prefs-section">
+      <div class="prefs-section__heading"><div><span>02</span><h2>Appearance</h2><p>Choose the color mood used across the app.</p></div><strong class="prefs-current">{{ themeService.theme() | titlecase }}</strong></div>
+      <div class="prefs-colors"><button type="button" *ngFor="let theme of themes" class="prefs-color" [class.prefs-color--active]="themeService.theme() === theme.value" (click)="chooseTheme(theme.value)"><i [class]="'prefs-swatch prefs-swatch--' + theme.value"></i><span><b>{{ theme.label }}</b><small>{{ theme.description }}</small></span><em *ngIf="themeService.theme() === theme.value">✓</em></button></div>
+    </section>
+
+    <section id="prefs-daily" class="prefs-section">
+      <div class="prefs-section__heading"><div><span>03</span><h2>Daily experience</h2><p>Adjust how Finesskin feels during your routine.</p></div></div>
+      <label class="prefs-switch"><span><b>Routine reminders</b><small>Gentle prompts for habits and to-dos.</small></span><input type="checkbox" [(ngModel)]="reminders"><i></i></label>
+      <label class="prefs-switch"><span><b>Sound effects</b><small>Allow timer and completion sounds.</small></span><input type="checkbox" [(ngModel)]="soundEffects"><i></i></label>
+      <label class="prefs-switch"><span><b>Reduce motion</b><small>Use calmer animations.</small></span><input type="checkbox" [(ngModel)]="reduceMotion"><i></i></label>
+      <label class="prefs-switch"><span><b>Compact layout</b><small>Fit more information on screen.</small></span><input type="checkbox" [(ngModel)]="compactLayout"><i></i></label>
+    </section>
+
+    <section id="prefs-privacy" class="prefs-section">
+      <div class="prefs-section__heading"><div><span>04</span><h2>Privacy & updates</h2><p>Choose which experiences you want enabled.</p></div></div>
+      <label class="prefs-switch"><span><b>Private progress</b><small>Keep camera roll and routine notes personal.</small></span><input type="checkbox" [(ngModel)]="privateMode"><i></i></label>
+      <label class="prefs-switch"><span><b>Email updates</b><small>Receive occasional self-care reminders.</small></span><input type="checkbox" [(ngModel)]="emailUpdates"><i></i></label>
+      <div class="prefs-actions"><button class="prefs-primary" type="button" (click)="savePreferences()">Save preferences</button><button class="prefs-secondary" type="button" (click)="resetPreferences()">Reset</button><span *ngIf="savedMessage">{{ savedMessage }}</span></div>
+    </section>
+
+    <section id="prefs-local" class="prefs-section prefs-section--last"><div class="prefs-section__heading"><div><span>05</span><h2>Local data</h2><p>Theme and preferences are stored in this browser.</p></div></div><button class="prefs-danger" type="button" (click)="clearLocalPreferences()">Clear local preferences</button></section>
+  </div>
+</main>

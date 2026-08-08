@@ -1,0 +1,150 @@
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <p class="admin-page__eyebrow">Roles management</p>
+      <h1 class="admin-page__title">Roles</h1>
+      <p class="admin-page__subtitle">
+        Create accounts with access levels, update role assignments, and remove assignments.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="admin-btn admin-btn--primary"
+      *ngIf="!showForm()"
+      (click)="startCreate()"
+    >
+      Add role assignment
+    </button>
+  </header>
+
+  <section class="admin-role-summary">
+    <article class="admin-role-summary__item">
+      <span class="admin-icon admin-icon--roles" aria-hidden="true"></span>
+      <div>
+        <div class="muted-sm">Super Admin</div>
+        <div class="big-number">{{ roleCount('SUPER_ADMIN') }}</div>
+      </div>
+    </article>
+    <article class="admin-role-summary__item">
+      <span class="admin-icon admin-icon--roles" aria-hidden="true"></span>
+      <div>
+        <div class="muted-sm">Admin</div>
+        <div class="big-number">{{ roleCount('ADMIN') }}</div>
+      </div>
+    </article>
+    <article class="admin-role-summary__item">
+      <span class="admin-icon admin-icon--users" aria-hidden="true"></span>
+      <div>
+        <div class="muted-sm">Customer</div>
+        <div class="big-number">{{ roleCount('CUSTOMER') }}</div>
+      </div>
+    </article>
+  </section>
+
+  <section class="admin-panel" *ngIf="showForm()">
+    <form class="admin-form" (submit)="save(); $event.preventDefault()">
+      <div class="admin-form__field">
+        <label for="role-name">Full name</label>
+        <input id="role-name" type="text" [(ngModel)]="formName" name="name" placeholder="Jane Doe" />
+      </div>
+      <div class="admin-form__field">
+        <label for="role-email">Email</label>
+        <input id="role-email" type="email" [(ngModel)]="formEmail" name="email" placeholder="jane@example.com" />
+      </div>
+      <div class="admin-form__field">
+        <label for="role-password">
+          {{ editingId() ? 'New password (optional)' : 'Password' }}
+        </label>
+        <input
+          id="role-password"
+          type="password"
+          [(ngModel)]="formPassword"
+          name="password"
+          placeholder="{{ editingId() ? 'Leave blank to keep current' : 'At least 6 characters' }}"
+          [required]="!editingId()"
+        />
+      </div>
+      <div class="admin-form__field">
+        <label for="role-value">Role</label>
+        <select id="role-value" [(ngModel)]="formRole" name="role">
+          <option value="CUSTOMER">Customer</option>
+          <option value="ADMIN">Admin</option>
+          <option value="SUPER_ADMIN" *ngIf="authService.isSuperAdmin()">Super Admin</option>
+        </select>
+      </div>
+      <div class="admin-form__field admin-form__permissions" *ngIf="formRole === 'ADMIN'">
+        <label>Feature permissions</label>
+        <div class="admin-permission-list">
+          <label class="admin-permission-check" *ngFor="let permission of permissionOptions">
+            <input
+              type="checkbox"
+              [checked]="hasFormPermission(permission.value)"
+              (change)="togglePermission(permission.value, $any($event.target).checked)"
+            />
+            <span>{{ permission.label }}</span>
+          </label>
+        </div>
+      </div>
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : editingId() ? 'Save role' : 'Create assignment' }}
+        </button>
+        <button type="button" class="admin-btn admin-btn--ghost" (click)="cancelForm()">
+          Cancel
+        </button>
+      </div>
+      <p class="admin-form__error" *ngIf="formError()">{{ formError() }}</p>
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th>Current role</th>
+            <th>Routines</th>
+            <th>Scans</th>
+            <th>Updated</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading()">
+          <tr *ngFor="let user of users()">
+            <td>
+              <div class="admin-table__cell-strong">{{ user.name }}</div>
+              <div class="admin-table__cell-sub">{{ user.email }}</div>
+            </td>
+            <td>
+              <span
+                class="admin-badge"
+                [class.admin-badge--admin]="user.role === 'ADMIN'"
+                [class.admin-badge--customer]="user.role === 'CUSTOMER'"
+              >
+                {{ roleLabel(user.role) }}
+              </span>
+            </td>
+            <td>{{ user._count.routines }}</td>
+            <td>{{ user._count.scans }}</td>
+            <td class="admin-table__cell-sub">{{ user.updatedAt | date: 'mediumDate' }}</td>
+            <td>
+              <div class="admin-actions" style="justify-content: flex-end">
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" (click)="startEdit(user)">
+                  Edit
+                </button>
+                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" (click)="deleteAssignment(user)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="users().length === 0">
+            <td colspan="6" class="admin-table__empty">No role assignments found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="admin-loading" *ngIf="loading()">Loading roles...</p>
+  </section>
+</div>

@@ -1,0 +1,23 @@
+<section class="reports-page">
+  <header class="reports-header">
+    <div class="report-periods" aria-label="Choose a time range">
+      <button *ngFor="let option of ['daily','weekly','monthly','yearly']" type="button" [class.is-active]="period() === option" (click)="setPeriod($any(option))">{{ option === 'daily' ? 'Today' : option === 'weekly' ? 'This week' : option === 'monthly' ? 'This month' : 'This year' }}</button>
+    </div>
+  </header>
+
+  <p class="reports-helper">Here is your {{ period() }} snapshot. There is no perfect score—this is simply a way to notice your progress.</p>
+
+  <div class="report-stats">
+    <article><span>Care steps finished</span><strong>{{ habitDone() }}</strong><small>of {{ habitTotal() }} tracked steps</small></article>
+    <article><span>Things checked off</span><strong>{{ todoDone() }}</strong><small>to-dos completed</small></article>
+    <article><span>Water enjoyed</span><strong>{{ waterTotal() }}</strong><small>glasses logged</small></article>
+    <article><span>Feelings recorded</span><strong>{{ moods().length }}</strong><small>mood check-ins</small></article>
+  </div>
+
+  <section class="report-card report-chart">
+    <div class="report-card__head"><div><p class="section-label">Your rhythm</p><h2>Small wins at a glance</h2></div><span>{{ rangeDays() }} day view</span></div>
+    <div class="chart-bars"><div class="chart-bar" *ngFor="let bar of chartBars()"><div class="chart-bar__track"><span [style.height.%]="bar.height"></span></div><strong>{{ bar.value }}</strong><small>{{ bar.label }}</small></div></div>
+  </section>
+
+  <section class="report-card report-insight"><p class="section-label">A note for you</p><h2>Consistency is built from small wins.</h2><p>You completed {{ habitDone() }} care steps and logged {{ waterTotal() }} glasses of water. Keep choosing one small action that makes tomorrow feel a little easier.</p></section>
+</section>

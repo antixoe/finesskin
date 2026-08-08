@@ -1,0 +1,524 @@
+<section class="client-dash">
+  <div class="celebration-overlay" *ngIf="celebrationVisible()" aria-live="polite">
+    <span class="confetti-piece" *ngFor="let piece of confettiPieces" [style.--i]="piece" [style.--h]="(piece * 37) % 360"></span>
+    <div class="celebration-card"><span class="celebration-card__heart">♡</span><h2>Everything is complete!</h2><p>You finished your habits, to-dos, mood check-in, and water goal.</p><button type="button" class="client-btn" (click)="dismissCelebration()">Keep going</button></div>
+  </div>
+  <!-- Loading -->
+  <section class="dashboard-loading" *ngIf="loading()" aria-live="polite">
+    <div class="dashboard-loader" aria-hidden="true"><span class="dashboard-loader__orbit dashboard-loader__orbit--one"></span><span class="dashboard-loader__orbit dashboard-loader__orbit--two"></span><span class="dashboard-loader__core">✦</span><span class="dashboard-loader__dot dashboard-loader__dot--one"></span><span class="dashboard-loader__dot dashboard-loader__dot--two"></span><span class="dashboard-loader__dot dashboard-loader__dot--three"></span></div>
+    <strong>{{ loadingPhrase() }}</strong>
+    <small>Loading your daily care moments...</small>
+  </section>
+
+  <div class="client-dash-grid" [class.dashboard-view--daily]="dashboardView() === 'daily'" [class.dashboard-view--chilling]="dashboardView() === 'chilling'" *ngIf="!loading()">
+    <!-- Calendar -->
+    <section class="panel client-panel client-panel--calendar">
+      <div class="client-panel__head">
+        <div>
+          <p class="section-label">Calendar</p>
+          <h2 class="client-panel__title">{{ monthLabel() }}</h2>
+        </div>
+        <div class="cal-nav">
+          <button type="button" class="cal-nav__btn" aria-label="Previous month" (click)="changeMonth(-1)">&lsaquo;</button>
+          <span class="cal-nav__label">{{ monthLabel() }}</span>
+          <button type="button" class="cal-nav__btn" aria-label="Next month" (click)="changeMonth(1)">&rsaquo;</button>
+          <button type="button" class="cal-nav__today" (click)="goToToday()">Today</button>
+        </div>
+      </div>
+
+      <div class="cal-weekdays">
+        <span *ngFor="let label of weekdayLabels">{{ label }}</span>
+      </div>
+
+      <div class="cal-grid">
+        <button
+          type="button"
+          class="cal-day"
+          *ngFor="let day of calendarDays()"
+          [class.cal-day--muted]="!day.inMonth"
+          [class.cal-day--today]="day.isToday"
+          [class.cal-day--selected]="day.key === selectedKey()"
+          (click)="selectDate(day.date)"
+        >
+          <span class="cal-day__num">{{ day.date.getDate() }}</span>
+          <span class="cal-day__meta">
+            <span class="cal-day__mood" *ngIf="day.mood">{{ moodEmoji(day.mood) }}</span>
+            <span class="cal-day__habits" *ngIf="day.habitsDone">{{ day.habitsDone }}/{{ day.habitTotal }}</span>
+            <span class="cal-day__water" *ngIf="day.glasses">💧{{ day.glasses }}</span>
+          </span>
+        </button>
+      </div>
+
+      <p class="cal-legend">
+        <span><span class="cal-day__habits">2/3</span> habits done</span>
+        <span>💧 water glasses</span>
+        <span>{{ moodEmoji('good') }} mood</span>
+      </p>
+    </section>
+
+    <nav class="dashboard-mini-nav" aria-label="Dashboard sections">
+      <span class="dashboard-mini-status"><i class="bi bi-stars" aria-hidden="true"></i>{{ dashboardMiniMessage }}</span>
+      <button type="button" class="dashboard-mini-link" title="Daily list" aria-label="Daily list" [class.dashboard-mini-link--active]="dashboardView() === 'daily'" (click)="selectDashboardView('daily')"><i class="bi bi-list-check" aria-hidden="true"></i></button>
+      <button type="button" class="dashboard-mini-link" title="Trackers" aria-label="Trackers" [class.dashboard-mini-link--active]="dashboardView() === 'trackers'" (click)="selectDashboardView('trackers')"><i class="bi bi-activity" aria-hidden="true"></i></button>
+      <button type="button" class="dashboard-mini-link" title="Chilling corner" aria-label="Chilling corner" [class.dashboard-mini-link--active]="dashboardView() === 'chilling'" (click)="selectDashboardView('chilling')"><i class="bi bi-music-note-beamed" aria-hidden="true"></i></button>
+    </nav>
+
+    <!-- Daily habits -->
+    <section *ngIf="dashboardView() === 'daily'" class="panel client-panel client-panel--habits">
+      <div class="client-panel__head">
+        <div>
+          <p class="section-label">Daily habits</p>
+          <h2 class="client-panel__title">{{ selectedLabel() }}</h2>
+        </div>
+        <div class="client-panel__head-actions">
+          <span class="client-pill">{{ habitsDone() }}/{{ habitTotal() || 0 }} done</span>
+          <button type="button" class="client-btn client-btn--sm" (click)="openHabitModal()">
+            ＋ New habit
+          </button>
+        </div>
+      </div>
+
+      <div class="habit-list" *ngIf="visibleHabits().length; else noHabits">
+        <div
+          class="habit-row"
+          *ngFor="let habit of pagedHabits()"
+          [class.habit-row--done]="isHabitDone(habit)"
+        >
+          <button
+            type="button"
+            class="habit-check"
+            [class.habit-check--on]="isHabitDone(habit)"
+            [attr.aria-label]="(isHabitDone(habit) ? 'Mark not done: ' : 'Mark done: ') + habit.title"
+            (click)="toggleHabit(habit)"
+          >
+            ✓
+          </button>
+          <span class="habit-row__emoji" aria-hidden="true">{{ habit.emoji }}</span>
+          <div class="habit-row__body">
+            <span class="habit-row__title">{{ habit.title }}</span>
+            <span class="habit-row__schedule">{{ scheduleLabel(habit) }}</span>
+          </div>
+          <button
+            type="button"
+            class="habit-camera"
+            aria-label="Add progress photo"
+            (click)="openPhotoModal('habit', habit.id, habit.title)"
+          ><svg class="camera-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M15 12.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-6A1.5 1.5 0 0 1 2.5 5h2.2l.7-1.2A1.5 1.5 0 0 1 6.7 3h2.6a1.5 1.5 0 0 1 1.3.8l.7 1.2h2.2A1.5 1.5 0 0 1 15 6.5v6ZM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-1a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm4.5-4.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg></button>
+          <button
+            type="button"
+            class="habit-delete"
+            aria-label="Delete habit"
+            (click)="removeHabit(habit)"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+      <ng-template #noHabits>
+        <p class="card-copy">No habits scheduled for {{ selectedLabel() }}.</p>
+        <button type="button" class="client-btn client-btn--sm" (click)="openHabitModal()">
+          ＋ Add a habit
+        </button>
+      </ng-template>
+      <div class="dashboard-pagination" *ngIf="habitPages() > 1"><button type="button" (click)="setHabitPage(habitPage() - 1)" [disabled]="habitPage() === 1" aria-label="Previous habits page">&lsaquo;</button><span>Page {{ habitPage() }} of {{ habitPages() }}</span><button type="button" (click)="setHabitPage(habitPage() + 1)" [disabled]="habitPage() === habitPages()" aria-label="Next habits page">&rsaquo;</button></div>
+    </section>
+
+    <!-- To-do list -->
+    <section *ngIf="dashboardView() === 'daily'" class="panel client-panel client-panel--todos">
+      <div class="client-panel__head">
+        <div>
+          <p class="section-label">To-do list</p>
+          <h2 class="client-panel__title">Things to do</h2>
+        </div>
+        <span class="client-pill">{{ doneTodos() }}/{{ todos().length }} done</span>
+      </div>
+
+      <div class="todo-add">
+        <input
+          type="text"
+          class="client-input"
+          [(ngModel)]="todoTitle"
+          placeholder="Add a task, e.g. Book follow-up scan"
+          (keyup.enter)="openTodoEditor()"
+        />
+        <button type="button" class="client-btn" (click)="openTodoEditor()">
+          Add
+        </button>
+      </div>
+
+      <div class="todo-list" *ngIf="todos().length; else noTodos">
+        <div class="todo-row" *ngFor="let todo of pagedTodos()" [class.todo-row--done]="todo.done" [class.todo-row--overdue]="todoIsOverdue(todo)" (click)="openTodoEditor(todo)">
+          <button
+            type="button"
+            class="todo-check"
+            [class.todo-check--on]="todo.done"
+            [attr.aria-label]="(todo.done ? 'Mark not done: ' : 'Mark done: ') + todo.title"
+            (click)="$event.stopPropagation(); toggleTodo(todo)"
+          >
+            ✓
+          </button>
+          <span class="todo-row__title">{{ todo.title }}</span>
+          <span class="todo-row__schedule" *ngIf="todo.dueDate">{{ todo.dueDate }}<span *ngIf="todo.dueTime"> · {{ todo.dueTime }}</span></span>
+          <button type="button" class="todo-alert" *ngIf="todoIsOverdue(todo)" aria-label="Reschedule overdue to-do" (click)="$event.stopPropagation(); openReschedule(todo)">!</button>
+          <button type="button" class="todo-camera" aria-label="Add progress photo" (click)="$event.stopPropagation(); openPhotoModal('todo', todo.id, todo.title)"><svg class="camera-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M15 12.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-6A1.5 1.5 0 0 1 2.5 5h2.2l.7-1.2A1.5 1.5 0 0 1 6.7 3h2.6a1.5 1.5 0 0 1 1.3.8l.7 1.2h2.2A1.5 1.5 0 0 1 15 6.5v6ZM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-1a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm4.5-4.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg></button>
+        </div>
+      </div>
+      <div class="dashboard-pagination" *ngIf="todoPages() > 1"><button type="button" (click)="setTodoPage(todoPage() - 1)" [disabled]="todoPage() === 1" aria-label="Previous to-do page">&lsaquo;</button><span>Page {{ todoPage() }} of {{ todoPages() }}</span><button type="button" (click)="setTodoPage(todoPage() + 1)" [disabled]="todoPage() === todoPages()" aria-label="Next to-do page">&rsaquo;</button></div>
+      <ng-template #noTodos>
+        <p class="card-copy">Nothing on your list — enjoy the calm!</p>
+      </ng-template>
+    </section>
+
+    <div class="todo-editor-backdrop" *ngIf="todoEditorOpen()" (click)="closeTodoEditor()">
+      <section class="todo-editor-modal" (click)="$event.stopPropagation()">
+        <button type="button" class="todo-editor-modal__close" (click)="closeTodoEditor()">&times;</button>
+        <p class="section-label">To-do item</p>
+        <h2>{{ todoEditorTarget() ? 'Edit to-do' : 'New to-do' }}</h2>
+        <label class="todo-editor-field"><span>Task</span><input class="client-input" type="text" [(ngModel)]="todoTitle" placeholder="What needs to be done?" /></label>
+        <label class="todo-editor-field"><span>Date</span><input class="client-input" type="date" [(ngModel)]="todoDate" /></label>
+        <label class="todo-editor-field"><span>Time</span><input class="client-input" type="time" [(ngModel)]="todoTime" /></label>
+        <div class="todo-editor-actions"><button type="button" class="client-btn" (click)="saveTodoEditor()">{{ todoEditorTarget() ? 'Save changes' : 'Add to-do' }}</button><button *ngIf="todoEditorTarget()" type="button" class="todo-editor-delete" (click)="deleteTodoFromEditor()">Delete</button></div>
+      </section>
+    </div>
+
+    <!-- Mood tracker -->
+    <section *ngIf="dashboardView() === 'trackers'" class="panel client-panel client-panel--mood">
+      <div class="client-panel__head">
+        <div>
+          <p class="section-label">Mood tracker</p>
+          <h2 class="client-panel__title">{{ selectedLabel() }}</h2>
+        </div>
+        <span class="client-pill" *ngIf="selectedMood() as mood">
+          {{ moodEmoji(mood.mood) }} {{ moodLabel(mood.mood) }}
+        </span>
+      </div>
+
+      <div class="mood-options">
+        <button
+          type="button"
+          class="mood-option"
+          *ngFor="let option of moodOptions"
+          [class.mood-option--active]="selectedMood()?.mood === option.value"
+          (click)="selectMood(option.value)"
+        >
+          <span class="mood-option__emoji mood-option__emoji--{{ option.value }}" aria-hidden="true">{{ option.emoji }}</span>
+          <span class="mood-option__label">{{ option.label }}</span>
+        </button>
+      </div>
+
+      <label class="mood-note">
+        <span class="mood-note__label">Add a note for this day (saves with your mood)</span>
+        <input
+          type="text"
+          class="client-input"
+          [(ngModel)]="moodNote"
+          placeholder="e.g. Skin felt calm after the evening routine"
+        />
+      </label>
+    </section>
+
+    <!-- Drink tracker -->
+    <section *ngIf="dashboardView() === 'trackers'" class="panel client-panel client-panel--drinks">
+      <div class="client-panel__head">
+        <div>
+          <p class="section-label">Water tracker</p>
+          <h2 class="client-panel__title">{{ selectedLabel() }}</h2>
+        </div>
+        <span class="client-pill" *ngIf="selectedGlasses() >= waterGoal">Goal reached! 🎉</span>
+      </div>
+
+      <div class="water-tracker-actions">
+        <button type="button" class="client-btn client-btn--sm client-btn--ghost" (click)="openWaterGoalEditor()">Set goal</button>
+      </div>
+
+      <div class="water-display">
+        <div class="water-count">
+          {{ selectedWaterDisplay() }}<span class="water-count__unit">/{{ waterGoalDisplay() }} {{ waterDisplayUnit() }}</span>
+        </div>
+        <div class="water-controls">
+          <button
+            type="button"
+            class="water-btn water-btn--minus"
+            aria-label="Remove a glass"
+            [disabled]="selectedGlasses() === 0"
+            (click)="adjustGlasses(-1)"
+          >
+            &minus;
+          </button>
+          <button
+            type="button"
+            class="water-btn"
+            aria-label="Add a glass"
+            [disabled]="selectedGlasses() >= 24"
+            (click)="adjustGlasses(1)"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      <div class="water-single-glass" role="progressbar" [style.--water-level]="waterPercent() + '%'" [attr.aria-valuenow]="selectedGlasses()" [attr.aria-valuemin]="0" [attr.aria-valuemax]="waterGoal" [attr.aria-label]="selectedGlasses() + ' of ' + waterGoal + ' glasses'">
+        <span
+          class="water-glass"
+          *ngFor="let glass of glassArray(waterGoal); let index = index"
+          [class.water-glass--filled]="index < selectedGlasses()"
+        >
+          💧
+        </span>
+        <span
+          class="water-glass"
+          *ngFor="let remaining of []"
+        >
+          💧
+        </span>
+      </div>
+      <p class="water-progress-label">{{ selectedGlasses() }} of {{ waterGoal }} glasses completed</p>
+    </section>
+
+    <div class="water-goal-backdrop" *ngIf="waterGoalEditorOpen()" (click)="closeWaterGoalEditor()">
+      <section class="water-goal-modal" (click)="$event.stopPropagation()">
+        <button type="button" class="water-adjust-modal__close" (click)="closeWaterGoalEditor()">&times;</button>
+        <p class="section-label">Water goal</p>
+        <h2>Set your daily target</h2>
+        <label class="water-goal-field"><span>Goal amount</span><input class="client-input" type="number" min="1" max="24" step="0.25" [(ngModel)]="waterGoalDraft" /></label>
+        <label class="water-goal-field"><span>Count as</span><select class="client-input" [(ngModel)]="waterUnitDraft"><option value="glasses">Glasses</option><option value="liters">Liters</option></select></label>
+        <div class="water-adjust-modal__actions"><button type="button" class="client-btn" (click)="saveWaterGoal()">Save goal</button><button type="button" class="client-btn client-btn--ghost" (click)="resetWaterGoal()">Reset</button></div>
+      </section>
+    </div>
+
+    <div class="water-adjust-backdrop" *ngIf="waterAdjustModalOpen()" (click)="closeWaterAdjustModal()">
+      <section class="water-adjust-modal" (click)="$event.stopPropagation()">
+        <button type="button" class="water-adjust-modal__close" (click)="closeWaterAdjustModal()">&times;</button>
+        <p class="section-label">Water tracker</p>
+        <h2>Add water</h2>
+        <p>How many glasses did you drink for {{ selectedLabel() }}?</p>
+        <input class="client-input water-adjust-modal__input" type="number" min="1" max="24" [(ngModel)]="waterAdjustAmount" />
+        <div class="water-adjust-modal__actions">
+          <button type="button" class="client-btn" (click)="applyWaterAdjustment()">Add to progress</button>
+          <button type="button" class="client-btn client-btn--ghost" (click)="closeWaterAdjustModal()">Cancel</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Music corner -->
+    <section *ngIf="dashboardView() === 'chilling'" class="panel client-panel client-panel--music" [class.music-mode--youtube]="musicMode() === 'youtube'" [class.music-mode--spotify]="musicMode() === 'spotify'">
+      <div class="client-panel__head">
+        <div>
+          <p class="section-label">Chilling corner</p>
+          <h2 class="client-panel__title">Set the mood</h2>
+        </div>
+        <div class="music-tabs" role="tablist" aria-label="Music provider">
+          <button type="button" class="music-tab music-tab--youtube" [class.music-tab--active]="musicMode() === 'youtube'" (click)="setMusicMode('youtube')" role="tab" [attr.aria-selected]="musicMode() === 'youtube'">
+            <span class="music-tab__icon">▶</span> YouTube
+          </button>
+          <button type="button" class="music-tab music-tab--spotify" [class.music-tab--active]="musicMode() === 'spotify'" (click)="setMusicMode('spotify')" role="tab" [attr.aria-selected]="musicMode() === 'spotify'">
+            <span class="music-tab__icon">●</span> Spotify
+          </button>
+        </div>
+      </div>
+
+      <div class="music-player-bar" aria-label="Chilling corner player">
+        <div class="music-player-bar__art">{{ musicMode() === 'youtube' ? '▶' : '●' }}</div>
+        <div class="music-player-bar__track"><strong>{{ musicMode() === 'youtube' ? 'Cozy YouTube picks' : 'Your Spotify playlist' }}</strong><span>{{ musicMode() === 'youtube' ? 'Choose a video to watch' : 'Log in to listen to your music' }}</span></div>
+        <div class="music-player-bar__controls"><span>↶</span><span class="music-player-bar__play">▶</span><span>↷</span></div>
+      </div>
+
+      <div *ngIf="musicMode() === 'youtube'" class="music-screen music-screen--youtube">
+        <iframe class="music-youtube-embed" title="YouTube girlie recommendation" src="https://www.youtube.com/embed/tTvyucjygF0" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <div class="music-tv" aria-label="YouTube recommendation screen">
+          <div class="music-tv__bar"><span></span><span></span><span></span><small>YouTube · now playing</small></div>
+          <div class="music-tv__content"><span class="music-tv__play">▶</span><strong>Pick a cozy video</strong><small>Tap a recommendation to watch</small></div>
+        </div>
+        <div class="music-screen__copy">
+          <span class="music-screen__badge">YouTube picks</span>
+          <h3>Watch something that feels good.</h3>
+          <p>Open a recommendation in YouTube and keep your routine feeling personal.</p>
+        </div>
+        <div class="music-recommendations">
+          <a class="music-recommendation" *ngFor="let recommendation of musicRecommendations" [class.music-recommendation--rose]="recommendation.accent === 'rose'" [class.music-recommendation--sky]="recommendation.accent === 'sky'" [class.music-recommendation--violet]="recommendation.accent === 'violet'" [href]="recommendation.url" target="_blank" rel="noreferrer">
+            <span class="music-recommendation__play">▶</span>
+            <span><strong>{{ recommendation.title }}</strong><small>{{ recommendation.description }}</small></span>
+          </a>
+        </div>
+      </div>
+
+      <div *ngIf="musicMode() === 'spotify'" class="music-screen music-screen--spotify">
+          <div class="music-spotify-player"><iframe title="Spotify music player" src="https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M?utm_source=generator" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>
+          <div class="music-screen__copy">
+            <span class="music-screen__badge">Spotify</span>
+            <h3>Listen while you reset.</h3>
+            <p>Play this cozy playlist here, or open Spotify to sign in and use your own library.</p>
+          </div>
+          <div class="music-spotify-actions">
+            <a class="music-login" href="https://accounts.spotify.com/login" target="_blank" rel="noreferrer">Log in to Spotify</a>
+            <a class="music-open" href="https://open.spotify.com/" target="_blank" rel="noreferrer">Open Spotify</a>
+          </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="reschedule-backdrop" *ngIf="rescheduleModalOpen()" (click)="closeReschedule()">
+    <section class="reschedule-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="reschedule-modal__close" (click)="closeReschedule()">&times;</button>
+      <p class="section-label">To-do timing</p>
+      <h2>Reschedule {{ rescheduleTarget()?.title }}</h2>
+      <p>This task is unfinished. Move it to tomorrow or choose another date.</p>
+      <label class="reschedule-field"><span>Date</span><input class="client-input" type="date" [(ngModel)]="rescheduleDate" /></label>
+      <label class="reschedule-field"><span>Time</span><input class="client-input" type="time" [(ngModel)]="rescheduleTime" /></label>
+      <div class="reschedule-actions"><button type="button" class="client-btn" (click)="moveTodoTomorrow()">Tomorrow</button><button type="button" class="client-btn" (click)="saveReschedule()">Save date</button></div>
+    </section>
+  </div>
+
+  <div class="photo-modal-backdrop" *ngIf="photoModalOpen()" (click)="closePhotoModal()">
+    <section class="photo-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="photo-modal__close" aria-label="Close" (click)="closePhotoModal()">&times;</button>
+      <p class="section-label">Progress photo</p>
+      <h2>Add a photo for {{ photoTarget()?.title }}</h2>
+      <p class="photo-modal__copy">Take a photo with your camera or choose one from your device.</p>
+      <div class="camera-live" *ngIf="cameraActive()">
+        <video #cameraVideo autoplay playsinline muted></video>
+        <button type="button" class="client-btn" (click)="captureCameraPhoto()">Capture photo</button>
+        <button type="button" class="client-btn client-btn--ghost" (click)="stopCamera()">Stop camera</button>
+      </div>
+      <button *ngIf="!cameraActive()" type="button" class="client-btn camera-start" (click)="startCamera()">
+        <svg class="camera-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M15 12.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-6A1.5 1.5 0 0 1 2.5 5h2.2l.7-1.2A1.5 1.5 0 0 1 6.7 3h2.6a1.5 1.5 0 0 1 1.3.8l.7 1.2h2.2A1.5 1.5 0 0 1 15 6.5v6ZM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-1a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm4.5-4.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg>
+        Take a photo
+      </button>
+      <label class="photo-upload">
+        <svg class="photo-upload__icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M15 12.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-6A1.5 1.5 0 0 1 2.5 5h2.2l.7-1.2A1.5 1.5 0 0 1 6.7 3h2.6a1.5 1.5 0 0 1 1.3.8l.7 1.2h2.2A1.5 1.5 0 0 1 15 6.5v6ZM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-1a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm4.5-4.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg>
+        <strong>Take or upload photo</strong>
+        <small>JPG, PNG, or HEIC</small>
+        <input type="file" accept="image/*" capture="environment" (change)="saveProgressPhoto($event)" />
+      </label>
+    </section>
+  </div>
+
+  <!-- New habit modal -->
+  <div class="habit-modal-backdrop" *ngIf="habitModalOpen()" (click)="closeHabitModal()">
+    <section class="habit-modal" (click)="$event.stopPropagation()">
+      <div class="habit-modal__head">
+        <div>
+          <p class="section-label">New habit</p>
+          <h2 class="habit-modal__title">Schedule a habit</h2>
+        </div>
+        <button type="button" class="habit-modal__close" aria-label="Close" (click)="closeHabitModal()">
+          &times;
+        </button>
+      </div>
+
+      <label class="habit-form-field">
+        <span class="habit-form-field__label">Habit name</span>
+        <input
+          type="text"
+          class="client-input"
+          [(ngModel)]="habitFormTitle"
+          placeholder="e.g. Apply sunscreen"
+        />
+      </label>
+
+      <div class="habit-form-field">
+        <span class="habit-form-field__label">Icon</span>
+        <div class="habit-add__emojis">
+          <button
+            type="button"
+            class="habit-add__emoji"
+            *ngFor="let emoji of habitEmojiOptions"
+            [class.habit-add__emoji--active]="habitFormEmoji() === emoji"
+            [attr.aria-label]="'Pick ' + emoji + ' for the new habit'"
+            (click)="habitFormEmoji.set(emoji)"
+          >
+            {{ emoji }}
+          </button>
+        </div>
+      </div>
+
+      <div class="habit-form-field">
+        <span class="habit-form-field__label">When should it show up?</span>
+        <div class="habit-schedule-options">
+          <button
+            type="button"
+            class="habit-schedule-option"
+            *ngFor="let option of habitScheduleOptions"
+            [class.habit-schedule-option--active]="habitFormSchedule() === option.value"
+            (click)="setSchedule(option.value)"
+          >
+            <span class="habit-schedule-option__label">{{ option.label }}</span>
+            <span class="habit-schedule-option__desc">{{ option.description }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="habit-form-field" *ngIf="habitFormSchedule() === 'weekly'">
+        <span class="habit-form-field__label">Days of the week</span>
+        <div class="habit-weekday-options">
+          <button
+            type="button"
+            class="habit-weekday"
+            *ngFor="let day of [0, 1, 2, 3, 4, 5, 6]"
+            [class.habit-weekday--active]="habitFormWeekdays().includes(day)"
+            (click)="toggleWeekday(day)"
+          >
+            {{ weekdayNames[day] }}
+          </button>
+        </div>
+      </div>
+
+      <div class="habit-form-field" *ngIf="habitFormSchedule() === 'dates'">
+        <span class="habit-form-field__label">Specific dates</span>
+        <div class="habit-date-row">
+          <input
+            type="date"
+            class="client-input"
+            [(ngModel)]="habitDateInput"
+            (keyup.enter)="addHabitDate()"
+          />
+          <button
+            type="button"
+            class="client-btn client-btn--sm"
+            [disabled]="!habitDateInput()"
+            (click)="addHabitDate()"
+          >
+            Add date
+          </button>
+        </div>
+        <div class="habit-date-list" *ngIf="habitFormDates().length">
+          <span class="habit-date-chip" *ngFor="let date of habitFormDates()">
+            {{ date }}
+            <button
+              type="button"
+              class="habit-date-chip__remove"
+              aria-label="Remove date"
+              (click)="removeHabitDate(date)"
+            >
+              &times;
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <label class="habit-form-field">
+        <span class="habit-form-field__label">Note (optional)</span>
+        <textarea
+          class="client-input habit-form-field__note"
+          [(ngModel)]="habitFormNote"
+          rows="2"
+          placeholder="A little reminder for this habit"
+        ></textarea>
+      </label>
+
+      <div class="habit-modal__actions">
+        <button type="button" class="client-btn client-btn--ghost" (click)="closeHabitModal()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="client-btn"
+          [disabled]="!habitFormTitle().trim()"
+          (click)="saveHabit()"
+        >
+          Save habit
+        </button>
+      </div>
+    </section>
+  </div>
+</section>

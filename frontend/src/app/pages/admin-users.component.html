@@ -1,0 +1,145 @@
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <p class="admin-page__eyebrow">User management</p>
+      <h1 class="admin-page__title">Users</h1>
+      <p class="admin-page__subtitle">
+        Create, edit, and manage every account on the platform.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="admin-btn admin-btn--primary"
+      *ngIf="!showForm()"
+      (click)="startCreate()"
+    >
+      Add user
+    </button>
+  </header>
+
+  <section class="admin-modal-backdrop" *ngIf="showForm()">
+    <div class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="user-dialog-title">
+      <div class="admin-modal__header">
+        <div>
+          <p class="admin-modal__eyebrow">{{ editingId() ? 'Edit user' : 'Add user' }}</p>
+          <h2 class="admin-modal__title" id="user-dialog-title">
+            {{ editingId() ? 'Update account details' : 'Create a new account' }}
+          </h2>
+        </div>
+        <button type="button" class="admin-modal__close" aria-label="Close" (click)="requestCancelForm()">×</button>
+      </div>
+      <div class="admin-modal__body">
+        <form class="admin-form" (submit)="save(); $event.preventDefault()">
+          <div class="admin-form__field">
+            <label for="user-name">Full name</label>
+            <input id="user-name" type="text" [(ngModel)]="formName" name="name" placeholder="Jane Doe" />
+          </div>
+          <div class="admin-form__field">
+            <label for="user-email">Email</label>
+            <input id="user-email" type="email" [(ngModel)]="formEmail" name="email" placeholder="jane@example.com" />
+          </div>
+          <div class="admin-form__field">
+            <label for="user-password">
+              {{ editingId() ? 'New password (optional)' : 'Password' }}
+            </label>
+            <input
+              id="user-password"
+              type="password"
+              [(ngModel)]="formPassword"
+              name="password"
+              placeholder="{{ editingId() ? 'Leave blank to keep current' : 'At least 6 characters' }}"
+              [required]="!editingId()"
+            />
+          </div>
+          <div class="admin-form__field">
+            <label for="user-role">Role</label>
+            <select id="user-role" [(ngModel)]="formRole" name="role">
+              <option value="CUSTOMER">Customer</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </div>
+          <div class="admin-form__actions">
+            <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+              {{ saving() ? 'Saving...' : editingId() ? 'Save changes' : 'Create user' }}
+            </button>
+            <button type="button" class="admin-btn admin-btn--ghost" (click)="requestCancelForm()">
+              Cancel
+            </button>
+          </div>
+          <p class="admin-form__error" *ngIf="formError()">{{ formError() }}</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-modal-backdrop" *ngIf="confirmModalOpen()">
+    <div class="admin-modal admin-modal--danger" role="dialog" aria-modal="true" aria-labelledby="user-confirm-title">
+      <div class="admin-modal__header">
+        <div>
+          <p class="admin-modal__eyebrow">Confirmation</p>
+          <h2 class="admin-modal__title" id="user-confirm-title">{{ confirmTitle() }}</h2>
+        </div>
+      </div>
+      <div class="admin-modal__body">
+        <p class="admin-modal__message">{{ confirmMessage() }}</p>
+        <div class="admin-modal__actions">
+          <button type="button" class="admin-btn admin-btn--ghost" (click)="closeConfirmModal()">Cancel</button>
+          <button type="button" class="admin-btn" [class.admin-btn--danger]="confirmDanger()" [class.admin-btn--primary]="!confirmDanger()" (click)="confirmAction()">
+            {{ confirmActionLabel() }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-panel">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Routines</th>
+            <th>Scans</th>
+            <th>Joined</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading()">
+          <tr *ngFor="let user of users()">
+            <td>
+              <div class="admin-table__cell-strong">{{ user.name }}</div>
+              <div class="admin-table__cell-sub">{{ user.email }}</div>
+            </td>
+            <td>
+              <span
+                class="admin-badge"
+                [class.admin-badge--admin]="user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'"
+                [class.admin-badge--customer]="user.role === 'CUSTOMER'"
+              >
+                {{ roleLabel(user.role) }}
+              </span>
+            </td>
+            <td>{{ user._count.routines }}</td>
+            <td>{{ user._count.scans }}</td>
+            <td class="admin-table__cell-sub">{{ user.createdAt | date: 'mediumDate' }}</td>
+            <td>
+              <div class="admin-actions" style="justify-content: flex-end">
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" (click)="startEdit(user)">
+                  Edit
+                </button>
+                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" (click)="deleteUser(user)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="users().length === 0">
+            <td colspan="6" class="admin-table__empty">No users found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="admin-loading" *ngIf="loading()">Loading users...</p>
+  </section>
+</div>

@@ -1,0 +1,123 @@
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <p class="admin-page__eyebrow">Product library</p>
+      <h1 class="admin-page__title">Products</h1>
+      <p class="admin-page__subtitle">
+        Manage every product in the Finesskin library across all users.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="admin-btn admin-btn--primary"
+      *ngIf="!showForm()"
+      (click)="startCreate()"
+    >
+      + Add product
+    </button>
+  </header>
+
+  <section class="admin-panel" *ngIf="showForm()">
+    <form class="admin-form" (submit)="save(); $event.preventDefault()">
+      <div class="admin-form__field">
+        <label for="product-name">Name</label>
+        <input id="product-name" type="text" [(ngModel)]="formName" name="name" placeholder="Hydrating serum" />
+      </div>
+      <div class="admin-form__field">
+        <label for="product-user">Owner</label>
+        <select id="product-user" [(ngModel)]="formUserId" name="userId">
+          <option *ngFor="let user of users()" [value]="user.id">{{ user.name }} ({{ user.email }})</option>
+        </select>
+      </div>
+      <div class="admin-form__field">
+        <label for="product-category">Category</label>
+        <select id="product-category" [(ngModel)]="formCategory" name="category">
+          <option *ngFor="let category of productCategories" [value]="category">{{ categoryLabel(category) }}</option>
+        </select>
+      </div>
+      <div class="admin-form__field">
+        <label for="product-timing">Timing</label>
+        <select id="product-timing" [(ngModel)]="formTiming" name="timing">
+          <option value="AM">AM</option>
+          <option value="PM">PM</option>
+        </select>
+      </div>
+      <div class="admin-form__field">
+        <label for="product-brand">Brand</label>
+        <input id="product-brand" type="text" [(ngModel)]="formBrand" name="brand" placeholder="Finesskin Lab" />
+      </div>
+      <div class="admin-form__field">
+        <label for="product-notes">Notes</label>
+        <textarea id="product-notes" [(ngModel)]="formNotes" name="notes" placeholder="Optional usage notes"></textarea>
+      </div>
+      <div class="admin-form__field admin-form__checkbox">
+        <label for="product-active">Active</label>
+        <input id="product-active" type="checkbox" [(ngModel)]="formActive" name="active" />
+      </div>
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : editingId() ? 'Save changes' : 'Create product' }}
+        </button>
+        <button type="button" class="admin-btn admin-btn--ghost" (click)="cancelForm()">
+          Cancel
+        </button>
+      </div>
+      <p class="admin-form__error" *ngIf="formError()">{{ formError() }}</p>
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Owner</th>
+            <th>Category</th>
+            <th>Timing</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading()">
+          <tr *ngFor="let product of products()">
+            <td>
+              <div class="admin-table__cell-strong">{{ product.name }}</div>
+              <div class="admin-table__cell-sub">{{ product.brand || 'No brand' }}</div>
+            </td>
+            <td>
+              <div class="admin-table__cell-strong">{{ product.user.name }}</div>
+              <div class="admin-table__cell-sub">{{ product.user.email }}</div>
+            </td>
+            <td>{{ categoryLabel(product.category) }}</td>
+            <td>
+              <span class="admin-badge" [class.admin-badge--am]="product.timing === 'AM'" [class.admin-badge--pm]="product.timing === 'PM'">
+                {{ product.timing }}
+              </span>
+            </td>
+            <td>
+              <span class="admin-badge" [class.admin-badge--active]="product.isActive" [class.admin-badge--inactive]="!product.isActive">
+                {{ product.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td>
+              <div class="admin-actions" style="justify-content: flex-end">
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" (click)="startEdit(product)">
+                  Edit
+                </button>
+                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" (click)="deleteProduct(product)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="products().length === 0">
+            <td colspan="6" class="admin-table__empty">No products found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="admin-loading" *ngIf="loading()">Loading products…</p>
+  </section>
+
+</div>

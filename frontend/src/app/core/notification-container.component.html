@@ -1,0 +1,25 @@
+<div class="notif-stack" aria-live="polite" aria-label="Notifications">
+  <div
+    class="notif"
+    [class.notif--success]="notification.type === 'success'"
+    [class.notif--error]="notification.type === 'error'"
+    [class.notif--info]="notification.type === 'info'"
+    *ngFor="let notification of notifications()"
+    (click)="notificationService.dismiss(notification.id)"
+  >
+    <span class="notif__icon" aria-hidden="true">{{ iconFor(notification.type) }}</span>
+    <div class="notif__body">
+      <div class="notif__title">{{ notification.title }}</div>
+      <div class="notif__message" *ngIf="notification.message">{{ notification.message }}</div>
+    </div>
+    <button
+      type="button"
+      class="notif__close"
+      aria-label="Dismiss notification"
+      (click)="$event.stopPropagation(); notificationService.dismiss(notification.id)"
+    >
+      ✕
+    </button>
+    <span class="notif__ticker" aria-hidden="true"></span>
+  </div>
+</div>

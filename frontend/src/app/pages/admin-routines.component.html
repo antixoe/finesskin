@@ -1,0 +1,107 @@
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <p class="admin-page__eyebrow">Routine management</p>
+      <h1 class="admin-page__title">Routines</h1>
+      <p class="admin-page__subtitle">
+        Create, edit, and remove AM / PM care routines across the platform.
+      </p>
+    </div>
+    <button
+      type="button"
+      class="admin-btn admin-btn--primary"
+      *ngIf="!showForm()"
+      (click)="startCreate()"
+    >
+      + Add routine
+    </button>
+  </header>
+
+  <section class="admin-panel" *ngIf="showForm()">
+    <form class="admin-form" (submit)="save(); $event.preventDefault()">
+      <div class="admin-form__field">
+        <label for="routine-name">Name</label>
+        <input id="routine-name" type="text" [(ngModel)]="formName" name="name" placeholder="Morning Reset" />
+      </div>
+      <div class="admin-form__field">
+        <label for="routine-user">Owner</label>
+        <select id="routine-user" [(ngModel)]="formUserId" name="userId">
+          <option *ngFor="let user of users()" [value]="user.id">{{ user.name }} ({{ user.email }})</option>
+        </select>
+      </div>
+      <div class="admin-form__field">
+        <label for="routine-timing">Timing</label>
+        <select id="routine-timing" [(ngModel)]="formTiming" name="timing">
+          <option value="AM">AM — Morning</option>
+          <option value="PM">PM — Evening</option>
+        </select>
+      </div>
+      <div class="admin-form__field">
+        <label for="routine-notes">Notes</label>
+        <textarea id="routine-notes" [(ngModel)]="formNotes" name="notes" placeholder="Optional notes"></textarea>
+      </div>
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : editingId() ? 'Save changes' : 'Create routine' }}
+        </button>
+        <button type="button" class="admin-btn admin-btn--ghost" (click)="cancelForm()">
+          Cancel
+        </button>
+      </div>
+      <p class="admin-form__error" *ngIf="formError()">{{ formError() }}</p>
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Routine</th>
+            <th>Owner</th>
+            <th>Timing</th>
+            <th>Streak</th>
+            <th>Steps</th>
+            <th>Completions</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody *ngIf="!loading()">
+          <tr *ngFor="let routine of routines()">
+            <td>
+              <div class="admin-table__cell-strong">{{ routine.name }}</div>
+              <div class="admin-table__cell-sub">{{ routine.notes || 'No notes' }}</div>
+            </td>
+            <td>
+              <div class="admin-table__cell-strong">{{ routine.user.name }}</div>
+              <div class="admin-table__cell-sub">{{ routine.user.email }}</div>
+            </td>
+            <td>
+              <span class="admin-badge" [class.admin-badge--am]="routine.timing === 'AM'" [class.admin-badge--pm]="routine.timing === 'PM'">
+                {{ timingLabel(routine.timing) }}
+              </span>
+            </td>
+            <td>{{ routine.streak }} day{{ routine.streak === 1 ? '' : 's' }}</td>
+            <td>{{ routine._count.items }}</td>
+            <td>{{ routine._count.completions }}</td>
+            <td>
+              <div class="admin-actions" style="justify-content: flex-end">
+                <button type="button" class="admin-btn admin-btn--ghost admin-btn--sm" (click)="startEdit(routine)">
+                  Edit
+                </button>
+                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" (click)="deleteRoutine(routine)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="routines().length === 0">
+            <td colspan="7" class="admin-table__empty">No routines found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="admin-loading" *ngIf="loading()">Loading routines…</p>
+  </section>
+
+</div>
