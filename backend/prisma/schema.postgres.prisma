@@ -167,6 +167,7 @@ model Habit {
   id           String     @id @default(cuid())
   userId       String
   title        String
+  category     String     @default("General")
   emoji        String     @default("⭐")
   scheduleType String     @default("daily") // daily | weekly | dates
   weekdays     Json?      // e.g. [1, 3, 5] for weekly (0 = Sunday)

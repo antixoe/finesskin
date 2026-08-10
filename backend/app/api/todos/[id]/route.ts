@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { isAdminRequest } from "@/lib/dashboard";
 
 type Params = {
   params: Promise<{
@@ -9,6 +10,7 @@ type Params = {
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request, { params }: Params) {
+  if (isAdminRequest(request)) return Response.json({ error: "Admin accounts cannot access customer to-dos." }, { status: 403 });
   const { id } = await params;
   const body = await request.json();
 
@@ -26,6 +28,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  if (isAdminRequest(_request)) return Response.json({ error: "Admin accounts cannot access customer to-dos." }, { status: 403 });
   const { id } = await params;
 
   await prisma.todoItem.delete({

@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import { AuthService } from '../core/auth.service';
 import { FinesskinApiService } from '../core/finesskin-api.service';
 import { NotificationService } from '../core/notification.service';
@@ -65,6 +67,8 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   private readonly api = inject(FinesskinApiService);
   private readonly notifications = inject(NotificationService);
   private readonly photoRoll = inject(PhotoRollService);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly router = inject(Router);
 
   protected readonly habits = signal<Habit[]>([]);
   protected readonly todos = signal<TodoItem[]>([]);
@@ -83,6 +87,8 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   private cameraStream?: MediaStream;
   protected readonly musicMode = signal<'youtube' | 'spotify'>('youtube');
   protected readonly musicOpen = signal(false);
+  protected readonly customYoutubeUrl = signal('');
+  protected readonly youtubeEmbedUrl = computed<SafeResourceUrl>(() => this.sanitizer.bypassSecurityTrustResourceUrl(this.youtubeEmbedSource()));
   protected readonly dashboardView = signal<'daily' | 'trackers' | 'chilling'>('daily');
   protected readonly hourlyQuotes = [
     'Small steps still count as progress.',
@@ -121,15 +127,29 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   protected readonly viewYear = signal(new Date().getFullYear());
   protected readonly viewMonth = signal(new Date().getMonth());
   protected readonly selectedDate = signal<Date>(new Date());
+  protected readonly calendarDetailOpen = signal(false);
   protected readonly habitPage = signal(1);
+  protected readonly habitSearch = signal('');
+  protected readonly selectedHabitCategory = signal('All');
+  protected readonly habitCategories = signal<string[]>(this.readHabitCategories());
+  protected readonly habitCategoryOptions = computed(() => ['All', ...this.habitCategories()]);
+  protected readonly habitCategoryManagerOpen = signal(false);
+  protected readonly newHabitCategory = signal('');
   protected readonly todoPage = signal(1);
   protected readonly pageSize = 5;
 
   protected readonly todoTitle = signal('');
+  protected readonly todoCategory = signal('General');
   protected readonly todoDate = signal(toKey(new Date()));
   protected readonly todoTime = signal('');
   protected readonly todoEditorOpen = signal(false);
   protected readonly todoEditorTarget = signal<TodoItem | null>(null);
+  protected readonly selectedTodoCategory = signal('All');
+  protected readonly todoSearch = signal('');
+  protected readonly todoCategories = signal<string[]>(this.readTodoCategories());
+  protected readonly todoCategoryOptions = computed(() => ['All', ...this.todoCategories()]);
+  protected readonly categoryManagerOpen = signal(false);
+  protected readonly newTodoCategory = signal('');
   protected readonly rescheduleModalOpen = signal(false);
   protected readonly rescheduleTarget = signal<TodoItem | null>(null);
   protected readonly rescheduleDate = signal(toKey(new Date()));
@@ -139,6 +159,7 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   // Habit modal state
   protected readonly habitModalOpen = signal(false);
   protected readonly habitFormTitle = signal('');
+  protected readonly habitFormCategory = signal('General');
   protected readonly habitFormEmoji = signal<string>('💧');
   protected readonly habitFormSchedule = signal<HabitScheduleType>('daily');
   protected readonly habitFormWeekdays = signal<number[]>([]);
@@ -189,14 +210,29 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
 
   protected readonly pagedHabits = computed(() => {
     const start = (Math.min(this.habitPage(), this.habitPages()) - 1) * this.pageSize;
-    return this.visibleHabits().slice(start, start + this.pageSize);
+    return this.filteredHabits().slice(start, start + this.pageSize);
   });
-  protected readonly habitPages = computed(() => Math.max(1, Math.ceil(this.visibleHabits().length / this.pageSize)));
+  protected readonly filteredHabits = computed(() => {
+    const query = this.habitSearch().trim().toLowerCase();
+    const categorized = this.selectedHabitCategory() === 'All'
+      ? this.visibleHabits()
+      : this.visibleHabits().filter((habit) => (habit.category || 'General') === this.selectedHabitCategory());
+    return query ? categorized.filter((habit) => `${habit.title} ${habit.category} ${habit.note ?? ''}`.toLowerCase().includes(query)) : categorized;
+  });
+  protected readonly habitPages = computed(() => Math.max(1, Math.ceil(this.filteredHabits().length / this.pageSize)));
   protected readonly pagedTodos = computed(() => {
     const start = (Math.min(this.todoPage(), this.todoPages()) - 1) * this.pageSize;
-    return this.todos().slice(start, start + this.pageSize);
+    return this.filteredTodos().slice(start, start + this.pageSize);
   });
-  protected readonly todoPages = computed(() => Math.max(1, Math.ceil(this.todos().length / this.pageSize)));
+  protected readonly visibleTodos = computed(() => this.selectedTodoCategory() === 'All' ? this.todos() : this.todos().filter((todo) => (todo.category ?? 'General') === this.selectedTodoCategory()));
+  protected readonly filteredTodos = computed(() => {
+    const query = this.todoSearch().trim().toLowerCase();
+    return query ? this.visibleTodos().filter((todo) => `${todo.title} ${todo.category ?? 'General'}`.toLowerCase().includes(query)) : this.visibleTodos();
+  });
+  protected readonly todoPages = computed(() => Math.max(1, Math.ceil(this.filteredTodos().length / this.pageSize)));
+  protected readonly selectedDateTodos = computed(() =>
+    this.todos().filter((todo) => todo.dueDate === this.selectedKey()),
+  );
 
   protected readonly habitsDone = computed(
     () =>
@@ -281,6 +317,10 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    if (this.authService.isAdmin()) {
+      void this.router.navigateByUrl('/dashboard');
+      return;
+    }
     this.refresh();
   }
 
@@ -316,7 +356,7 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
     this.initialLoads = 0;
     this.loading.set(true);
     this.api.getHabits().subscribe((response) => { this.habits.set(response.habits); this.finishInitialLoad(); });
-    this.api.getTodos().subscribe((response) => { this.todos.set(response.todos); this.finishInitialLoad(); });
+    this.api.getTodos().subscribe((response) => { this.todos.set(this.normalizeTodos(response.todos)); this.finishInitialLoad(); });
     this.api.getMoods().subscribe((response) => { this.moods.set(response.moods); this.finishInitialLoad(); });
     this.api.getDrinks().subscribe((response) => { this.drinks.set(response.drinks); this.finishInitialLoad(); });
     this.api.getWaterGoal().subscribe((response) => {
@@ -358,6 +398,15 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected openCalendarDetail(date: Date): void {
+    this.selectDate(date);
+    this.calendarDetailOpen.set(true);
+  }
+
+  protected closeCalendarDetail(): void {
+    this.calendarDetailOpen.set(false);
+  }
+
   // ---- Habits ----
 
   protected isHabitDone(habit: Habit): boolean {
@@ -389,6 +438,7 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
 
   protected openHabitModal() {
     this.habitFormTitle.set('');
+    this.habitFormCategory.set(this.selectedHabitCategory() === 'All' ? 'General' : this.selectedHabitCategory());
     this.habitFormEmoji.set('💧');
     this.habitFormSchedule.set('daily');
     this.habitFormWeekdays.set([]);
@@ -448,6 +498,7 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
 
     const payload: HabitPayload = {
       title,
+      category: this.habitFormCategory(),
       emoji: this.habitFormEmoji(),
       scheduleType: schedule,
       weekdays: schedule === 'weekly' ? this.habitFormWeekdays() : [],
@@ -491,10 +542,14 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
     if (!title) {
       return;
     }
+    const category = this.selectedTodoCategory() === 'All' ? 'General' : this.selectedTodoCategory();
+    this.todoCategory.set(category);
 
-    this.api.createTodo(title, this.todoDate(), this.todoTime() || undefined).subscribe({
+    this.api.createTodo(title, this.todoDate(), this.todoTime() || undefined, category).subscribe({
       next: ({ todo }) => {
-        this.todos.set([...this.todos(), todo]);
+        const next = { ...todo, category };
+        this.saveTodoCategory(next);
+        this.todos.set([...this.todos(), next]);
         this.todoTitle.set('');
         this.todoDate.set(toKey(new Date()));
         this.todoTime.set('');
@@ -505,6 +560,7 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   protected openTodoEditor(todo?: TodoItem): void {
     this.todoEditorTarget.set(todo ?? null);
     this.todoTitle.set(todo?.title ?? '');
+    this.todoCategory.set(todo?.category ?? (this.selectedTodoCategory() === 'All' ? 'General' : this.selectedTodoCategory()));
     this.todoDate.set(todo?.dueDate || toKey(new Date()));
     this.todoTime.set(todo?.dueTime || '');
     this.todoEditorOpen.set(true);
@@ -516,12 +572,13 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
     const title = this.todoTitle().trim();
     if (!title) return;
     const target = this.todoEditorTarget();
-    const patch = { title, dueDate: this.todoDate() || null, dueTime: this.todoTime() || null };
+    const patch = { title, category: this.todoCategory(), dueDate: this.todoDate() || null, dueTime: this.todoTime() || null };
     if (target) {
       this.todos.set(this.todos().map((todo) => todo.id === target.id ? { ...todo, ...patch } : todo));
+      this.saveTodoCategory({ ...target, ...patch });
       this.api.updateTodo(target.id, patch).subscribe();
     } else {
-      this.api.createTodo(title, this.todoDate(), this.todoTime() || undefined).subscribe(({ todo }) => this.todos.set([todo, ...this.todos()]));
+      this.api.createTodo(title, this.todoDate(), this.todoTime() || undefined, this.todoCategory()).subscribe(({ todo }) => { const next = { ...todo, category: this.todoCategory() }; this.saveTodoCategory(next); this.todos.set([next, ...this.todos()]); });
     }
     this.closeTodoEditor();
   }
@@ -749,6 +806,32 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
     this.musicOpen.set(true);
   }
 
+  protected applyYoutubeLink(): void {
+    const source = this.youtubeEmbedSource(this.customYoutubeUrl());
+    if (!source) {
+      this.notifications.error('Invalid YouTube link', 'Paste a YouTube video or playlist URL.');
+      return;
+    }
+    this.customYoutubeUrl.set(this.customYoutubeUrl().trim());
+    this.notifications.success('YouTube link added', 'Your personal video or playlist is now in the Chilling Corner.');
+  }
+
+  protected clearYoutubeLink(): void { this.customYoutubeUrl.set(''); }
+
+  private youtubeEmbedSource(url = this.customYoutubeUrl()): string {
+    if (!url.trim()) return 'https://www.youtube.com/embed/tTvyucjygF0';
+    try {
+      const parsed = new URL(url.trim());
+      const host = parsed.hostname.replace('www.', '').toLowerCase();
+      if (host !== 'youtube.com' && host !== 'youtu.be' && host !== 'm.youtube.com') return '';
+      const list = parsed.searchParams.get('list');
+      const video = host === 'youtu.be' ? parsed.pathname.slice(1) : parsed.searchParams.get('v') ?? parsed.pathname.split('/').pop();
+      if (list) return `https://www.youtube.com/embed/${video && video !== 'playlist' ? video : 'videoseries'}?list=${encodeURIComponent(list)}`;
+      if (video && /^[\w-]{6,}$/.test(video)) return `https://www.youtube.com/embed/${video}`;
+    } catch { /* Invalid URL is handled by applyYoutubeLink. */ }
+    return '';
+  }
+
   protected get dashboardMiniMessage(): string {
     return this.musicOpen() ? `Now playing · ${this.musicMode() === 'youtube' ? 'YouTube picks' : 'Spotify playlist'}` : this.dailyQuote();
   }
@@ -763,7 +846,88 @@ export class ClientDashboardPageComponent implements OnInit, OnDestroy {
   }
 
   protected setHabitPage(page: number): void { this.habitPage.set(Math.max(1, Math.min(page, this.habitPages()))); }
+  protected searchHabits(value: string): void { this.habitSearch.set(value); this.habitPage.set(1); }
+  protected selectHabitCategory(category: string): void { this.selectedHabitCategory.set(category); this.habitPage.set(1); }
+  protected habitCountForCategory(category: string): number { return category === 'All' ? this.visibleHabits().length : this.visibleHabits().filter((habit) => (habit.category || 'General') === category).length; }
+  protected openHabitCategoryManager(): void { this.newHabitCategory.set(''); this.habitCategoryManagerOpen.set(true); }
+  protected closeHabitCategoryManager(): void { this.habitCategoryManagerOpen.set(false); }
+  protected addHabitCategory(): void {
+    const category = this.newHabitCategory().trim().slice(0, 32);
+    if (!category || this.habitCategories().some((item) => item.toLowerCase() === category.toLowerCase())) return;
+    this.habitCategories.update((items) => [...items, category]); this.writeHabitCategories(); this.newHabitCategory.set(''); this.selectedHabitCategory.set(category);
+  }
+  protected removeHabitCategory(category: string): void {
+    if (category === 'General') return;
+    this.habitCategories.update((items) => items.filter((item) => item !== category));
+    this.habits.update((items) => items.map((habit) => {
+      if ((habit.category || 'General') !== category) return habit;
+      const next = { ...habit, category: 'General' };
+      this.api.updateHabit(habit.id, { category: 'General' }).subscribe();
+      return next;
+    }));
+    this.writeHabitCategories(); if (this.selectedHabitCategory() === category) this.selectedHabitCategory.set('All');
+  }
+  protected editHabitCategory(category: string): void {
+    if (category === 'General' || typeof window === 'undefined') return;
+    const next = window.prompt('Rename habit category', category)?.trim().slice(0, 32) ?? '';
+    if (!next || next.toLowerCase() === category.toLowerCase() || this.habitCategories().some((item) => item !== category && item.toLowerCase() === next.toLowerCase())) return;
+    this.habitCategories.update((items) => items.map((item) => item === category ? next : item));
+    this.habits.update((items) => items.map((habit) => {
+      if ((habit.category || 'General') !== category) return habit;
+      this.api.updateHabit(habit.id, { category: next }).subscribe();
+      return { ...habit, category: next };
+    }));
+    this.writeHabitCategories();
+    if (this.selectedHabitCategory() === category) this.selectedHabitCategory.set(next);
+  }
+  private readHabitCategories(): string[] { if (typeof localStorage === 'undefined') return ['General']; try { const items = JSON.parse(localStorage.getItem(this.habitCategoryKey()) ?? '["General"]') as string[]; return ['General', ...items.filter((item) => item !== 'General')]; } catch { return ['General']; } }
+  private writeHabitCategories(): void { if (typeof localStorage !== 'undefined') localStorage.setItem(this.habitCategoryKey(), JSON.stringify(this.habitCategories())); }
+  private habitCategoryKey(): string { return `finesskin-habit-categories-${this.authService.user()?.id ?? 'guest'}`; }
   protected setTodoPage(page: number): void { this.todoPage.set(Math.max(1, Math.min(page, this.todoPages()))); }
+  protected selectTodoCategory(category: string): void { this.selectedTodoCategory.set(category); this.todoPage.set(1); }
+  protected searchTodos(value: string): void { this.todoSearch.set(value); this.todoPage.set(1); }
+  protected todoCountForCategory(category: string): number { return category === 'All' ? this.todos().length : this.todos().filter((todo) => (todo.category ?? 'General') === category).length; }
+  protected openCategoryManager(): void { this.newTodoCategory.set(''); this.categoryManagerOpen.set(true); }
+  protected closeCategoryManager(): void { this.categoryManagerOpen.set(false); }
+  protected addTodoCategory(): void {
+    const category = this.newTodoCategory().trim().slice(0, 32);
+    if (!category || this.todoCategories().some((item) => item.toLowerCase() === category.toLowerCase())) return;
+    this.todoCategories.update((items) => [...items, category]); this.writeTodoCategories(); this.newTodoCategory.set(''); this.selectedTodoCategory.set(category);
+  }
+  protected removeTodoCategory(category: string): void {
+    if (category === 'General') return;
+    this.todoCategories.update((items) => items.filter((item) => item !== category));
+    this.todos.update((items) => items.map((todo) => {
+      if (todo.category !== category) return todo;
+      const next = { ...todo, category: 'General' };
+      this.saveTodoCategory(next);
+      this.api.updateTodo(todo.id, { category: 'General' }).subscribe();
+      return next;
+    }));
+    this.writeTodoCategories(); if (this.selectedTodoCategory() === category) this.selectedTodoCategory.set('All');
+  }
+  protected editTodoCategory(category: string): void {
+    if (category === 'General' || typeof window === 'undefined') return;
+    const next = window.prompt('Rename to-do category', category)?.trim().slice(0, 32) ?? '';
+    if (!next || next.toLowerCase() === category.toLowerCase() || this.todoCategories().some((item) => item !== category && item.toLowerCase() === next.toLowerCase())) return;
+    this.todoCategories.update((items) => items.map((item) => item === category ? next : item));
+    this.todos.update((items) => items.map((todo) => {
+      if ((todo.category || 'General') !== category) return todo;
+      const updated = { ...todo, category: next };
+      this.saveTodoCategory(updated);
+      this.api.updateTodo(todo.id, { category: next }).subscribe();
+      return updated;
+    }));
+    this.writeTodoCategories();
+    if (this.selectedTodoCategory() === category) this.selectedTodoCategory.set(next);
+  }
+  private normalizeTodos(todos: TodoItem[]): TodoItem[] { const map = this.readTodoCategoryMap(); return todos.map((todo) => ({ ...todo, category: todo.category ?? map[todo.id] ?? 'General' })); }
+  private saveTodoCategory(todo: TodoItem): void { const map = this.readTodoCategoryMap(); map[todo.id] = todo.category ?? 'General'; this.writeTodoCategoryMap(map); }
+  private readTodoCategories(): string[] { if (typeof localStorage === 'undefined') return ['General']; try { const items = JSON.parse(localStorage.getItem(this.todoCategoryKey()) ?? '["General"]') as string[]; return ['General', ...items.filter((item) => item !== 'General')]; } catch { return ['General']; } }
+  private writeTodoCategories(): void { if (typeof localStorage !== 'undefined') localStorage.setItem(this.todoCategoryKey(), JSON.stringify(this.todoCategories())); }
+  private todoCategoryKey(): string { return `finesskin-todo-categories-${this.authService.user()?.id ?? 'guest'}`; }
+  private readTodoCategoryMap(): Record<string, string> { if (typeof localStorage === 'undefined') return {}; try { return JSON.parse(localStorage.getItem(`${this.todoCategoryKey()}-map`) ?? '{}') as Record<string, string>; } catch { return {}; } }
+  private writeTodoCategoryMap(map: Record<string, string>): void { if (typeof localStorage !== 'undefined') localStorage.setItem(`${this.todoCategoryKey()}-map`, JSON.stringify(map)); }
 
   ngOnDestroy(): void {
     if (this.quoteTimer) window.clearInterval(this.quoteTimer);

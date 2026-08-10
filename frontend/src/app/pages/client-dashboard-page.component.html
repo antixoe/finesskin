@@ -38,7 +38,7 @@
           [class.cal-day--muted]="!day.inMonth"
           [class.cal-day--today]="day.isToday"
           [class.cal-day--selected]="day.key === selectedKey()"
-          (click)="selectDate(day.date)"
+          (click)="openCalendarDetail(day.date)"
         >
           <span class="cal-day__num">{{ day.date.getDate() }}</span>
           <span class="cal-day__meta">
@@ -78,7 +78,13 @@
         </div>
       </div>
 
-      <div class="habit-list" *ngIf="visibleHabits().length; else noHabits">
+      <label class="todo-search habit-search" aria-label="Search habits"><span aria-hidden="true">⌕</span><input type="search" [value]="habitSearch()" (input)="searchHabits($any($event.target).value)" placeholder="Search your habits..." /></label>
+      <div class="todo-category-nav" aria-label="Filter habits by category">
+        <button type="button" *ngFor="let category of habitCategoryOptions()" [class.is-active]="selectedHabitCategory() === category" (click)="selectHabitCategory(category)">{{ category }}<small>{{ habitCountForCategory(category) }}</small></button>
+        <button type="button" class="todo-category-manage" (click)="openHabitCategoryManager()">+ Categories</button>
+      </div>
+
+      <div class="habit-list" *ngIf="filteredHabits().length; else noHabits">
         <div
           class="habit-row"
           *ngFor="let habit of pagedHabits()"
@@ -115,7 +121,7 @@
         </div>
       </div>
       <ng-template #noHabits>
-        <p class="card-copy">No habits scheduled for {{ selectedLabel() }}.</p>
+        <p class="card-copy">{{ habitSearch() ? 'No habits match your search.' : 'No habits scheduled for ' + selectedLabel() + '.' }}</p>
         <button type="button" class="client-btn client-btn--sm" (click)="openHabitModal()">
           ＋ Add a habit
         </button>
@@ -146,7 +152,14 @@
         </button>
       </div>
 
-      <div class="todo-list" *ngIf="todos().length; else noTodos">
+      <div class="todo-category-nav" aria-label="Filter to-dos by category">
+        <button type="button" *ngFor="let category of todoCategoryOptions()" [class.is-active]="selectedTodoCategory() === category" (click)="selectTodoCategory(category)">{{ category }}<small>{{ todoCountForCategory(category) }}</small></button>
+        <button type="button" class="todo-category-manage" (click)="openCategoryManager()">+ Categories</button>
+      </div>
+
+      <label class="todo-search" aria-label="Search to-dos"><span aria-hidden="true">⌕</span><input type="search" [value]="todoSearch()" (input)="searchTodos($any($event.target).value)" placeholder="Search your to-dos..." /></label>
+
+      <div class="todo-list" *ngIf="filteredTodos().length; else noTodos">
         <div class="todo-row" *ngFor="let todo of pagedTodos()" [class.todo-row--done]="todo.done" [class.todo-row--overdue]="todoIsOverdue(todo)" (click)="openTodoEditor(todo)">
           <button
             type="button"
@@ -157,7 +170,7 @@
           >
             ✓
           </button>
-          <span class="todo-row__title">{{ todo.title }}</span>
+          <span class="todo-row__title">{{ todo.title }}<small class="todo-row__category">{{ todo.category || 'General' }}</small></span>
           <span class="todo-row__schedule" *ngIf="todo.dueDate">{{ todo.dueDate }}<span *ngIf="todo.dueTime"> · {{ todo.dueTime }}</span></span>
           <button type="button" class="todo-alert" *ngIf="todoIsOverdue(todo)" aria-label="Reschedule overdue to-do" (click)="$event.stopPropagation(); openReschedule(todo)">!</button>
           <button type="button" class="todo-camera" aria-label="Add progress photo" (click)="$event.stopPropagation(); openPhotoModal('todo', todo.id, todo.title)"><svg class="camera-icon" viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M15 12.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-6A1.5 1.5 0 0 1 2.5 5h2.2l.7-1.2A1.5 1.5 0 0 1 6.7 3h2.6a1.5 1.5 0 0 1 1.3.8l.7 1.2h2.2A1.5 1.5 0 0 1 15 6.5v6ZM8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-1a2 2 0 1 1 0-4 2 2 0 0 1 0 4Zm4.5-4.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"/></svg></button>
@@ -165,7 +178,7 @@
       </div>
       <div class="dashboard-pagination" *ngIf="todoPages() > 1"><button type="button" (click)="setTodoPage(todoPage() - 1)" [disabled]="todoPage() === 1" aria-label="Previous to-do page">&lsaquo;</button><span>Page {{ todoPage() }} of {{ todoPages() }}</span><button type="button" (click)="setTodoPage(todoPage() + 1)" [disabled]="todoPage() === todoPages()" aria-label="Next to-do page">&rsaquo;</button></div>
       <ng-template #noTodos>
-        <p class="card-copy">Nothing on your list — enjoy the calm!</p>
+        <p class="card-copy">{{ todoSearch() ? 'No to-dos match your search.' : 'Nothing on your list — enjoy the calm!' }}</p>
       </ng-template>
     </section>
 
@@ -175,9 +188,19 @@
         <p class="section-label">To-do item</p>
         <h2>{{ todoEditorTarget() ? 'Edit to-do' : 'New to-do' }}</h2>
         <label class="todo-editor-field"><span>Task</span><input class="client-input" type="text" [(ngModel)]="todoTitle" placeholder="What needs to be done?" /></label>
+        <label class="todo-editor-field"><span>Category</span><select class="client-input" [(ngModel)]="todoCategory"><option *ngFor="let category of todoCategories()" [value]="category">{{ category }}</option></select></label>
         <label class="todo-editor-field"><span>Date</span><input class="client-input" type="date" [(ngModel)]="todoDate" /></label>
         <label class="todo-editor-field"><span>Time</span><input class="client-input" type="time" [(ngModel)]="todoTime" /></label>
         <div class="todo-editor-actions"><button type="button" class="client-btn" (click)="saveTodoEditor()">{{ todoEditorTarget() ? 'Save changes' : 'Add to-do' }}</button><button *ngIf="todoEditorTarget()" type="button" class="todo-editor-delete" (click)="deleteTodoFromEditor()">Delete</button></div>
+      </section>
+    </div>
+
+    <div class="todo-category-backdrop" *ngIf="categoryManagerOpen()" (click)="closeCategoryManager()">
+      <section class="todo-category-modal" (click)="$event.stopPropagation()">
+        <button type="button" class="todo-editor-modal__close" (click)="closeCategoryManager()">&times;</button>
+        <p class="section-label">Organize your list</p><h2>To-do categories</h2><p class="card-copy">Create your own spaces for work, self-care, errands, or anything else.</p>
+        <div class="todo-category-create"><input class="client-input" type="text" [(ngModel)]="newTodoCategory" placeholder="New category" (keyup.enter)="addTodoCategory()" /><button type="button" class="client-btn" (click)="addTodoCategory()">Add</button></div>
+        <div class="todo-category-manager-list"><span *ngFor="let category of todoCategories()" class="todo-category-chip"><span>{{ category }}</span><ng-container *ngIf="category !== 'General'"><button type="button" (click)="editTodoCategory(category)" [attr.aria-label]="'Edit ' + category">Edit</button><button type="button" (click)="removeTodoCategory(category)" [attr.aria-label]="'Remove ' + category">&times;</button></ng-container></span></div>
       </section>
     </div>
 
@@ -324,7 +347,7 @@
       </div>
 
       <div *ngIf="musicMode() === 'youtube'" class="music-screen music-screen--youtube">
-        <iframe class="music-youtube-embed" title="YouTube girlie recommendation" src="https://www.youtube.com/embed/tTvyucjygF0" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        <iframe class="music-youtube-embed" title="Your YouTube video or playlist" [src]="youtubeEmbedUrl()" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
         <div class="music-tv" aria-label="YouTube recommendation screen">
           <div class="music-tv__bar"><span></span><span></span><span></span><small>YouTube · now playing</small></div>
           <div class="music-tv__content"><span class="music-tv__play">▶</span><strong>Pick a cozy video</strong><small>Tap a recommendation to watch</small></div>
@@ -332,7 +355,8 @@
         <div class="music-screen__copy">
           <span class="music-screen__badge">YouTube picks</span>
           <h3>Watch something that feels good.</h3>
-          <p>Open a recommendation in YouTube and keep your routine feeling personal.</p>
+          <p>Paste your own video or playlist link to make this space yours.</p>
+          <div class="music-youtube-custom"><input class="music-youtube-url" type="url" [ngModel]="customYoutubeUrl()" (ngModelChange)="customYoutubeUrl.set($event)" placeholder="Paste a YouTube video or playlist link" /><button type="button" (click)="applyYoutubeLink()">Use link</button><button *ngIf="customYoutubeUrl()" type="button" class="music-youtube-clear" (click)="clearYoutubeLink()">Clear</button></div>
         </div>
         <div class="music-recommendations">
           <a class="music-recommendation" *ngFor="let recommendation of musicRecommendations" [class.music-recommendation--rose]="recommendation.accent === 'rose'" [class.music-recommendation--sky]="recommendation.accent === 'sky'" [class.music-recommendation--violet]="recommendation.accent === 'violet'" [href]="recommendation.url" target="_blank" rel="noreferrer">
@@ -414,6 +438,13 @@
           [(ngModel)]="habitFormTitle"
           placeholder="e.g. Apply sunscreen"
         />
+      </label>
+
+      <label class="habit-form-field">
+        <span class="habit-form-field__label">Category</span>
+        <select class="client-input" [(ngModel)]="habitFormCategory">
+          <option *ngFor="let category of habitCategories()" [value]="category">{{ category }}</option>
+        </select>
       </label>
 
       <div class="habit-form-field">
@@ -518,6 +549,54 @@
         >
           Save habit
         </button>
+      </div>
+    </section>
+  </div>
+
+  <div class="todo-category-backdrop" *ngIf="habitCategoryManagerOpen()" (click)="closeHabitCategoryManager()">
+    <section class="todo-category-modal" (click)="$event.stopPropagation()">
+      <button type="button" class="todo-editor-modal__close" (click)="closeHabitCategoryManager()">&times;</button>
+      <p class="section-label">Organize your habits</p><h2>Habit categories</h2><p class="card-copy">Create categories that fit the habits you want to build.</p>
+      <div class="todo-category-create"><input class="client-input" type="text" [(ngModel)]="newHabitCategory" placeholder="New category" (keyup.enter)="addHabitCategory()" /><button type="button" class="client-btn" (click)="addHabitCategory()">Add</button></div>
+      <div class="todo-category-manager-list"><span *ngFor="let category of habitCategories()" class="todo-category-chip"><span>{{ category }}</span><ng-container *ngIf="category !== 'General'"><button type="button" (click)="editHabitCategory(category)" [attr.aria-label]="'Edit ' + category">Edit</button><button type="button" (click)="removeHabitCategory(category)" [attr.aria-label]="'Remove ' + category">&times;</button></ng-container></span></div>
+    </section>
+  </div>
+
+  <div class="calendar-detail-backdrop" *ngIf="calendarDetailOpen()" (click)="closeCalendarDetail()">
+    <section class="calendar-detail-modal" role="dialog" aria-modal="true" [attr.aria-label]="'Details for ' + selectedLabel()" (click)="$event.stopPropagation()">
+      <button type="button" class="calendar-detail-modal__close" aria-label="Close date details" (click)="closeCalendarDetail()">&times;</button>
+      <p class="section-label">Daily reflection</p>
+      <h2>{{ selectedLabel() }}</h2>
+      <p class="calendar-detail-modal__intro">Here’s the full picture of your care moments for this day.</p>
+
+      <div class="calendar-detail-stats">
+        <div><span class="calendar-detail-stat__icon">{{ selectedMood() ? moodEmoji(selectedMood()!.mood) : '♡' }}</span><small>Mood</small><strong>{{ selectedMood()?.mood || 'Not checked in' }}</strong></div>
+        <div><span class="calendar-detail-stat__icon">💧</span><small>Water</small><strong>{{ selectedGlasses() }} / {{ waterGoal }} {{ waterDisplayUnit() }}</strong></div>
+        <div><span class="calendar-detail-stat__icon">✓</span><small>Habits</small><strong>{{ habitsDone() }} / {{ habitTotal() || 0 }} done</strong></div>
+      </div>
+
+      <div class="calendar-detail-section" *ngIf="selectedMood()?.note">
+        <span class="calendar-detail-section__label">Mood note</span>
+        <p>{{ selectedMood()?.note }}</p>
+      </div>
+
+      <div class="calendar-detail-columns">
+        <div class="calendar-detail-section">
+          <span class="calendar-detail-section__label">Habits</span>
+          <p class="calendar-detail-empty" *ngIf="!visibleHabits().length">No habits scheduled.</p>
+          <div class="calendar-detail-item" *ngFor="let habit of visibleHabits()">
+            <span [class.is-done]="isHabitDone(habit)">{{ isHabitDone(habit) ? '✓' : '○' }}</span>
+            <strong>{{ habit.emoji }} {{ habit.title }}</strong>
+          </div>
+        </div>
+        <div class="calendar-detail-section">
+          <span class="calendar-detail-section__label">To-dos</span>
+          <p class="calendar-detail-empty" *ngIf="!selectedDateTodos().length">No to-dos for this date.</p>
+          <div class="calendar-detail-item" *ngFor="let todo of selectedDateTodos()">
+            <span [class.is-done]="todo.done">{{ todo.done ? '✓' : '○' }}</span>
+            <strong>{{ todo.title }}</strong>
+          </div>
+        </div>
       </div>
     </section>
   </div>

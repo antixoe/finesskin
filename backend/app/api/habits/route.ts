@@ -1,11 +1,12 @@
-import { getDemoUser } from "@/lib/dashboard";
+import { getDemoUser, isAdminRequest } from "@/lib/dashboard";
 import prisma from "@/lib/prisma";
 
 const SCHEDULE_TYPES = new Set(["daily", "weekly", "dates"]);
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (isAdminRequest(request)) return Response.json({ error: "Admin accounts cannot access customer habits." }, { status: 403 });
   const user = await getDemoUser();
 
   if (!user) {
@@ -22,6 +23,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (isAdminRequest(request)) return Response.json({ error: "Admin accounts cannot access customer habits." }, { status: 403 });
   const user = await getDemoUser();
 
   if (!user) {
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const title = String(body.title ?? "").trim().slice(0, 120);
+  const category = String(body.category ?? "General").trim().slice(0, 32) || "General";
 
   if (!title) {
     return Response.json({ error: "Habit title is required." }, { status: 400 });
@@ -65,6 +68,7 @@ export async function POST(request: Request) {
     data: {
       userId: user.id,
       title,
+      category,
       emoji: String(body.emoji ?? "⭐").slice(0, 8),
       scheduleType,
       weekdays: weekdays && weekdays.length ? weekdays : undefined,

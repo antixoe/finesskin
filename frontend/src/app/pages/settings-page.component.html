@@ -1,11 +1,11 @@
 <main class="prefs-page">
   <aside class="prefs-sidebar" aria-label="Settings sections">
     <p>Settings</p>
-    <a href="#prefs-personal">Personal info</a>
-    <a href="#prefs-appearance">Appearance</a>
-    <a href="#prefs-daily">Daily experience</a>
-    <a href="#prefs-privacy">Privacy</a>
-    <a href="#prefs-local">Local data</a>
+    <button type="button" (click)="scrollToSection('prefs-personal')">Personal info</button>
+    <button type="button" (click)="scrollToSection('prefs-appearance')">Appearance</button>
+    <button type="button" (click)="scrollToSection('prefs-daily')">Daily experience</button>
+    <button type="button" (click)="scrollToSection('prefs-privacy')">Privacy</button>
+    <button type="button" (click)="scrollToSection('prefs-local')">Local data</button>
   </aside>
 
   <div class="prefs-content">

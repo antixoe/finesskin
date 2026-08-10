@@ -16,6 +16,8 @@ export class PomodoroPageComponent implements OnDestroy {
   protected breakMinutes = 5;
   protected musicUrl = '';
   protected musicEnabled = false;
+  protected uploadedTracks: { name: string; url: string }[] = [];
+  protected musicTrackIndex = 0;
   protected mode: TimerMode = 'focus';
   protected secondsLeft = this.workMinutes * 60;
   protected running = false;
@@ -79,6 +81,21 @@ export class PomodoroPageComponent implements OnDestroy {
 
   protected clearBackground(): void { this.backgroundImage = ''; }
 
+  protected chooseMusicFiles(event: Event): void {
+    const files = Array.from((event.target as HTMLInputElement).files ?? []).filter((file) => file.type.startsWith('audio/'));
+    this.uploadedTracks.forEach((track) => URL.revokeObjectURL(track.url));
+    this.uploadedTracks = files.map((file) => ({ name: file.name, url: URL.createObjectURL(file) }));
+    this.musicTrackIndex = 0;
+    this.musicEnabled = this.uploadedTracks.length > 0;
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  protected get uploadedMusicUrl(): string { return this.uploadedTracks[this.musicTrackIndex]?.url ?? ''; }
+  protected get activeMusicName(): string { return this.uploadedTracks[this.musicTrackIndex]?.name ?? ''; }
+  protected nextMusicTrack(): void { if (this.uploadedTracks.length) this.musicTrackIndex = (this.musicTrackIndex + 1) % this.uploadedTracks.length; }
+  protected previousMusicTrack(): void { if (this.uploadedTracks.length) this.musicTrackIndex = (this.musicTrackIndex - 1 + this.uploadedTracks.length) % this.uploadedTracks.length; }
+  protected clearUploadedMusic(): void { this.uploadedTracks.forEach((track) => URL.revokeObjectURL(track.url)); this.uploadedTracks = []; this.musicTrackIndex = 0; }
+
   protected openSettings(): void { this.showSettings = true; }
   protected closeSettings(): void { this.showSettings = false; }
 
@@ -121,5 +138,5 @@ export class PomodoroPageComponent implements OnDestroy {
     } catch { /* Audio may be unavailable until the browser receives a gesture. */ }
   }
 
-  ngOnDestroy(): void { this.stopTicking(); }
+  ngOnDestroy(): void { this.stopTicking(); this.clearUploadedMusic(); }
 }

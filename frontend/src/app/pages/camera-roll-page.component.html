@@ -9,7 +9,12 @@
     <button type="button" [class.is-active]="galleryCategory === 'todo'" (click)="setGalleryCategory('todo')"><i class="bi bi-list-check"></i><span>To-do list</span><small>{{ countByType('todo') }}</small></button>
   </nav>
 
-  <section class="gallery-filter-empty" *ngIf="photoRoll.photos().length && !filteredPhotos.length"><i class="bi bi-camera"></i><p>No photos in this category yet.</p></section>
+  <div class="gallery-tools" *ngIf="photoRoll.photos().length">
+    <label class="gallery-search" aria-label="Search camera roll"><i class="bi bi-search" aria-hidden="true"></i><input type="search" [(ngModel)]="gallerySearch" placeholder="Search photos, habits, or captions..." /></label>
+    <label class="gallery-sort">Sort by <select [(ngModel)]="gallerySort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="title">Title A–Z</option></select></label>
+  </div>
+
+  <section class="gallery-filter-empty" *ngIf="photoRoll.photos().length && !filteredPhotos.length"><i class="bi bi-camera"></i><p>{{ gallerySearch ? 'No photos match your search.' : 'No photos in this category yet.' }}</p></section>
 
   <section class="gallery-feed" *ngIf="filteredPhotos.length">
     <article class="gallery-post" *ngFor="let photo of filteredPhotos" (click)="openDetail(photo)">

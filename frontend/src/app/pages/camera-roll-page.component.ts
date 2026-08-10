@@ -14,11 +14,21 @@ export class CameraRollPageComponent {
   protected readonly photoRoll = inject(PhotoRollService);
   protected selectedPhoto: ProgressPhoto | null = null;
   protected galleryCategory: 'all' | 'habit' | 'todo' = 'all';
+  protected gallerySearch = '';
+  protected gallerySort: 'newest' | 'oldest' | 'title' = 'newest';
   protected caption = '';
 
   protected get filteredPhotos(): ProgressPhoto[] {
     const photos = this.photoRoll.photos();
-    return this.galleryCategory === 'all' ? photos : photos.filter((photo) => photo.targetType === this.galleryCategory);
+    const query = this.gallerySearch.trim().toLowerCase();
+    return photos
+      .filter((photo) => this.galleryCategory === 'all' || photo.targetType === this.galleryCategory)
+      .filter((photo) => !query || `${photo.targetTitle} ${photo.caption ?? ''} ${photo.targetType}`.toLowerCase().includes(query))
+      .sort((a, b) => this.gallerySort === 'title'
+        ? a.targetTitle.localeCompare(b.targetTitle)
+        : this.gallerySort === 'oldest'
+          ? a.createdAt.localeCompare(b.createdAt)
+          : b.createdAt.localeCompare(a.createdAt));
   }
 
   protected setGalleryCategory(category: 'all' | 'habit' | 'todo'): void {

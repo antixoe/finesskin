@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthModalService, AuthMode } from './core/auth-modal.service';
 import { AuthService } from './core/auth.service';
 import { NotificationContainerComponent } from './core/notification-container.component';
 import { NotificationService } from './core/notification.service';
 import { ThemeService } from './core/theme.service';
 import { HttpClient } from '@angular/common/http';
+import { ReminderService } from './core/reminder.service';
 
 interface FieMessage { role: 'user' | 'model'; text: string; }
 
@@ -24,6 +25,7 @@ export class App {
   private readonly router = inject(Router);
   private readonly themeService = inject(ThemeService);
   private readonly http = inject(HttpClient);
+  protected readonly reminderService = inject(ReminderService);
   protected readonly fieOpen = signal(false);
   protected readonly fieBusy = signal(false);
   protected readonly fieInput = signal('');
@@ -53,6 +55,26 @@ export class App {
   protected authSuccess = '';
   protected readonly authBusy = signal(false);
   protected readonly showPassword = signal(false);
+  protected readonly routeLoading = signal(false);
+  private routeLoadingTimer?: ReturnType<typeof setTimeout>;
+  private routeStartedAt = 0;
+
+  constructor() {
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationStart) {
+        this.routeStartedAt = Date.now();
+        clearTimeout(this.routeLoadingTimer);
+        this.routeLoadingTimer = setTimeout(() => this.routeLoading.set(true), 120);
+        return;
+      }
+
+      if (event instanceof NavigationEnd || event instanceof NavigationCancel || event instanceof NavigationError) {
+        clearTimeout(this.routeLoadingTimer);
+        const remaining = Math.max(0, 360 - (Date.now() - this.routeStartedAt));
+        this.routeLoadingTimer = setTimeout(() => this.routeLoading.set(false), remaining);
+      }
+    });
+  }
 
   protected openAuth(mode: AuthMode): void {
     this.resetFeedback();

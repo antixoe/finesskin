@@ -24,14 +24,8 @@
       <a *ngIf="authService.hasPermission('ROLES')" data-tooltip="Roles" routerLink="/dashboard/roles" routerLinkActive="is-active">
         <span class="admin-icon admin-icon--roles" aria-hidden="true"></span><span class="admin-nav-text">Roles</span>
       </a>
-      <a *ngIf="authService.hasPermission('ROUTINES')" data-tooltip="Routines" routerLink="/dashboard/routines" routerLinkActive="is-active">
-        <i class="bi bi-calendar2-week-fill" aria-hidden="true"></i><span class="admin-nav-text">Routines</span>
-      </a>
-      <a *ngIf="authService.hasPermission('SCANS')" data-tooltip="Scans" routerLink="/dashboard/scans" routerLinkActive="is-active">
-        <i class="bi bi-camera-fill" aria-hidden="true"></i><span class="admin-nav-text">Scans</span>
-      </a>
-      <a *ngIf="authService.hasPermission('SETTINGS')" data-tooltip="Settings" routerLink="/dashboard/settings" routerLinkActive="is-active">
-        <i class="bi bi-gear-fill" aria-hidden="true"></i><span class="admin-nav-text">Settings</span>
+      <a *ngIf="authService.hasPermission('ACTIVITY')" data-tooltip="Activity" routerLink="/dashboard/activity" routerLinkActive="is-active">
+        <i class="bi bi-activity" aria-hidden="true"></i><span class="admin-nav-text">Activity</span>
       </a>
     </nav>
 

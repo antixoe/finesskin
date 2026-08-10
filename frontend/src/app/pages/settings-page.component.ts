@@ -27,6 +27,10 @@ export class SettingsPageComponent {
     { value: 'ja', label: '日本語 (Japanese)' }, { value: 'ko', label: '한국어 (Korean)' },
   ];
   protected savedMessage = '';
+
+  protected scrollToSection(sectionId: string): void {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   protected readonly themes: { value: AppTheme; label: string; description: string }[] = [
     { value: 'blue', label: 'Ocean blue', description: 'The current Finesskin look.' },
     { value: 'pink', label: 'Soft pink', description: 'Warm, playful, and gentle.' },

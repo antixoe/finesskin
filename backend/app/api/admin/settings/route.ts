@@ -16,7 +16,7 @@ function toBoolean(value: string): boolean {
 }
 
 export async function GET(request: Request) {
-  const admin = await requireAdmin(request, "SETTINGS");
+  const admin = await requireAdmin(request, "ACTIVITY");
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
@@ -37,9 +37,7 @@ export async function GET(request: Request) {
       allowSignups: toBoolean(store.allowSignups),
       maintenanceMode: toBoolean(store.maintenanceMode),
     },
-    activityLogs:
-      admin.role === "SUPER_ADMIN"
-        ? await prisma.activityLog.findMany({
+    activityLogs: await prisma.activityLog.findMany({
             orderBy: { createdAt: "desc" },
             take: 25,
             include: {
@@ -50,13 +48,12 @@ export async function GET(request: Request) {
                 },
               },
             },
-          })
-        : [],
+          }),
   });
 }
 
 export async function PUT(request: Request) {
-  const admin = await requireAdmin(request, "SETTINGS");
+  const admin = await requireAdmin(request, "SUPER_ADMIN_ONLY" as never);
 
   if (!admin) {
     return Response.json({ error: "Admin access required." }, { status: 403 });

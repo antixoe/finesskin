@@ -2,6 +2,87 @@
   min-height: 100vh;
 }
 
+.route-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(247, 251, 255, 0.48);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.route-loading.is-visible {
+  opacity: 1;
+}
+
+.route-loading__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 38%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #139ce7, #67e8f9, #b8ecff);
+  box-shadow: 0 0 12px rgba(19, 156, 231, 0.7);
+  animation: routeLoadingSlide 900ms ease-in-out infinite;
+}
+
+.route-loading__card {
+  display: grid;
+  justify-items: center;
+  gap: .35rem;
+  padding: 1.15rem 1.5rem;
+  border: 1px solid rgba(189, 228, 246, .95);
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, .92);
+  box-shadow: 0 18px 45px rgba(44, 120, 165, .16);
+  animation: routeLoadingCardIn 240ms ease both;
+}
+
+.route-loading__spinner {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 2px solid #bde4f6;
+  border-top-color: #139ce7;
+  border-radius: 50%;
+  color: #139ce7;
+  font-size: 1rem;
+  animation: routeLoadingSpin 800ms linear infinite;
+}
+
+.route-loading__card strong { color: #294963; font-size: .8rem; }
+.route-loading__card small { color: #7890a2; font-size: .65rem; }
+
+.app-main {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.app-main.is-route-loading {
+  opacity: 0.72;
+  transform: translateY(2px);
+}
+
+@keyframes routeLoadingSlide {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(330%); }
+}
+
+@keyframes routeLoadingSpin { to { transform: rotate(360deg); } }
+@keyframes routeLoadingCardIn { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .route-loading__bar { animation-duration: 1.8s; }
+  .route-loading__spinner,.route-loading__card { animation: none; }
+  .app-main { transition: none; }
+}
+
 .site-header {
   position: sticky;
   top: 0;

@@ -1,0 +1,28 @@
+<div class="admin-page">
+  <header class="admin-page__header">
+    <div>
+      <p class="admin-page__eyebrow">Audit trail</p>
+      <h1 class="admin-page__title">Activity logs</h1>
+      <p class="admin-page__subtitle">Review administrative actions without opening private customer data.</p>
+    </div>
+  </header>
+
+  <section class="admin-panel">
+    <div class="admin-table-wrap" *ngIf="!loading()">
+      <table class="admin-table">
+        <thead><tr><th>Action</th><th>Actor</th><th>Target</th><th>Details</th><th>Time</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let log of logs()">
+            <td class="admin-table__cell-strong">{{ log.action }}</td>
+            <td><div>{{ log.actor?.name || 'System' }}</div><div class="admin-table__cell-sub" *ngIf="log.actor">{{ log.actor.email }}</div></td>
+            <td>{{ log.target }}</td>
+            <td>{{ log.detail || 'No detail' }}</td>
+            <td class="admin-table__cell-sub">{{ log.createdAt | date: 'medium' }}</td>
+          </tr>
+          <tr *ngIf="logs().length === 0"><td colspan="5" class="admin-table__empty">No activity recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="admin-loading" *ngIf="loading()">Loading activity logs...</p>
+  </section>
+</div>

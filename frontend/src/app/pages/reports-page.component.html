@@ -1,23 +1,16 @@
 <section class="reports-page">
   <header class="reports-header">
-    <div class="report-periods" aria-label="Choose a time range">
-      <button *ngFor="let option of ['daily','weekly','monthly','yearly']" type="button" [class.is-active]="period() === option" (click)="setPeriod($any(option))">{{ option === 'daily' ? 'Today' : option === 'weekly' ? 'This week' : option === 'monthly' ? 'This month' : 'This year' }}</button>
-    </div>
+    <div><p class="section-label">Progress overview</p><p class="reports-helper">A clearer look at the care you’ve completed, one date range at a time.</p></div>
+    <div class="report-periods" aria-label="Choose a time range"><button *ngFor="let option of ['daily','weekly','monthly','yearly']" type="button" [class.is-active]="period() === option" (click)="setPeriod($any(option))">{{ option === 'daily' ? 'Today' : option === 'weekly' ? 'This week' : option === 'monthly' ? 'This month' : 'This year' }}</button></div>
   </header>
 
-  <p class="reports-helper">Here is your {{ period() }} snapshot. There is no perfect score—this is simply a way to notice your progress.</p>
+  <section class="report-controls report-card"><div><p class="section-label">Choose dates</p><h2>What would you like to review?</h2></div><div class="report-date-controls"><label>From <input type="date" [ngModel]="startDate()" (ngModelChange)="startDate.set($event)"></label><span>to</span><label>Until <input type="date" [ngModel]="endDate()" (ngModelChange)="endDate.set($event)"></label><button type="button" class="report-apply" (click)="applyCustomRange()">Apply range</button></div></section>
 
-  <div class="report-stats">
-    <article><span>Care steps finished</span><strong>{{ habitDone() }}</strong><small>of {{ habitTotal() }} tracked steps</small></article>
-    <article><span>Things checked off</span><strong>{{ todoDone() }}</strong><small>to-dos completed</small></article>
-    <article><span>Water enjoyed</span><strong>{{ waterTotal() }}</strong><small>glasses logged</small></article>
-    <article><span>Feelings recorded</span><strong>{{ moods().length }}</strong><small>mood check-ins</small></article>
-  </div>
+  <div class="reports-grid reports-grid--summary"><section class="report-card report-summary"><p class="section-label">Summary</p><h2>{{ rangeDays() }} day snapshot</h2><div class="report-stats"><article><span>Habit progress</span><strong>{{ completionRate() }}%</strong><small>{{ habitDone() }} of {{ habitTotal() }} completed</small></article><article><span>To-dos complete</span><strong>{{ todoDone() }}</strong><small>of {{ todoInRange().length }} in this range</small></article><article><span>Water logged</span><strong>{{ waterTotal() }}</strong><small>glasses recorded</small></article><article><span>Mood check-ins</span><strong>{{ moodTotal() }}</strong><small>feelings recorded</small></article></div></section><section class="report-card report-insight"><p class="section-label">Your takeaway</p><h2>{{ completionRate() >= 80 ? 'You are building a lovely rhythm.' : 'Small steps are still progress.' }}</h2><p>You completed {{ habitDone() }} care steps, checked off {{ todoDone() }} to-dos, and logged {{ waterTotal() }} glasses during this selected period.</p></section></div>
 
-  <section class="report-card report-chart">
-    <div class="report-card__head"><div><p class="section-label">Your rhythm</p><h2>Small wins at a glance</h2></div><span>{{ rangeDays() }} day view</span></div>
-    <div class="chart-bars"><div class="chart-bar" *ngFor="let bar of chartBars()"><div class="chart-bar__track"><span [style.height.%]="bar.height"></span></div><strong>{{ bar.value }}</strong><small>{{ bar.label }}</small></div></div>
+  <section class="report-card report-chart"><div class="report-card__head"><div><p class="section-label">Your rhythm</p><h2>Progress by category</h2></div><div class="chart-switcher"><button type="button" *ngFor="let type of ['bars','trend','donut']" [class.is-active]="chartType() === type" (click)="setChartType($any(type))">{{ type === 'bars' ? 'Bars' : type === 'trend' ? 'Trend' : 'Donut' }}</button></div></div>
+    <div class="chart-bars" *ngIf="chartType() === 'bars'"><div class="chart-bar" *ngFor="let bar of chartBars()"><div class="chart-bar__track"><span [style.height.%]="bar.height"></span></div><strong>{{ bar.value }}</strong><small>{{ bar.label }}</small></div></div>
+    <div class="chart-trend" *ngIf="chartType() === 'trend'"><div class="trend-point" *ngFor="let bar of chartBars()" [style.--trend-height.%]="bar.height"><span></span><strong>{{ bar.value }}</strong><small>{{ bar.label }}</small></div></div>
+    <div class="chart-donut-wrap" *ngIf="chartType() === 'donut'"><div class="chart-donut" [style.background]="'conic-gradient(' + donutGradient() + ')' "><strong>{{ habitDone() + todoDone() + waterTotal() + moodTotal() }}</strong><small>Total signals</small></div><div class="chart-legend"><span *ngFor="let bar of chartBars(); let i = index"><i [class]="'legend-color legend-color--' + i"></i>{{ bar.label }} <b>{{ bar.value }}</b></span></div></div>
   </section>
-
-  <section class="report-card report-insight"><p class="section-label">A note for you</p><h2>Consistency is built from small wins.</h2><p>You completed {{ habitDone() }} care steps and logged {{ waterTotal() }} glasses of water. Keep choosing one small action that makes tomorrow feel a little easier.</p></section>
 </section>

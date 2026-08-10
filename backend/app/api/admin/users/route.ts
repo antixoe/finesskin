@@ -22,9 +22,6 @@ export async function GET(request: Request) {
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
-      _count: {
-        select: { products: true, routines: true, scans: true },
-      },
     },
   });
 
@@ -101,9 +98,6 @@ export async function POST(request: Request) {
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
-      _count: {
-        select: { products: true, routines: true, scans: true },
-      },
     },
   });
 

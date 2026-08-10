@@ -104,8 +104,6 @@
           <tr>
             <th>Account</th>
             <th>Current role</th>
-            <th>Routines</th>
-            <th>Scans</th>
             <th>Updated</th>
             <th></th>
           </tr>
@@ -125,8 +123,6 @@
                 {{ roleLabel(user.role) }}
               </span>
             </td>
-            <td>{{ user._count.routines }}</td>
-            <td>{{ user._count.scans }}</td>
             <td class="admin-table__cell-sub">{{ user.updatedAt | date: 'mediumDate' }}</td>
             <td>
               <div class="admin-actions" style="justify-content: flex-end">
@@ -140,7 +136,7 @@
             </td>
           </tr>
           <tr *ngIf="users().length === 0">
-            <td colspan="6" class="admin-table__empty">No role assignments found.</td>
+            <td colspan="4" class="admin-table__empty">No role assignments found.</td>
           </tr>
         </tbody>
       </table>

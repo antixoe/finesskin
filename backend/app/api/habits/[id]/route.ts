@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { isAdminRequest } from "@/lib/dashboard";
 
 type Params = {
   params: Promise<{
@@ -11,6 +12,7 @@ const SCHEDULE_TYPES = new Set(["daily", "weekly", "dates"]);
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request, { params }: Params) {
+  if (isAdminRequest(request)) return Response.json({ error: "Admin accounts cannot access customer habits." }, { status: 403 });
   const { id } = await params;
   const body = await request.json();
 
@@ -50,6 +52,7 @@ export async function PATCH(request: Request, { params }: Params) {
     where: { id },
     data: {
       title: body.title ? String(body.title).slice(0, 120) : undefined,
+      category: body.category !== undefined ? String(body.category || "General").trim().slice(0, 32) || "General" : undefined,
       emoji: body.emoji ? String(body.emoji).slice(0, 8) : undefined,
       scheduleType,
       weekdays,
@@ -63,6 +66,7 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+  if (isAdminRequest(_request)) return Response.json({ error: "Admin accounts cannot access customer habits." }, { status: 403 });
   const { id } = await params;
 
   await prisma.habit.delete({

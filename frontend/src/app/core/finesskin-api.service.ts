@@ -219,6 +219,7 @@ export class FinesskinApiService {
           const habit: Habit = {
             id: this.makeId('habit'),
             title: payload.title,
+            category: payload.category,
             emoji: payload.emoji,
             scheduleType: payload.scheduleType,
             weekdays: payload.weekdays,
@@ -242,6 +243,12 @@ export class FinesskinApiService {
         this.writeStore(store);
         return of({ ok: true });
       }),
+    );
+  }
+
+  updateHabit(id: string, patch: Partial<Pick<Habit, 'category'>>) {
+    return this.http.patch<{ habit: Habit }>(`/api/habits/${id}`, patch).pipe(
+      map((response) => ({ habit: this.normalizeHabit(response.habit) })),
     );
   }
 
@@ -282,15 +289,16 @@ export class FinesskinApiService {
       .pipe(catchError(() => of({ todos: this.readStore().todos })));
   }
 
-  createTodo(title: string, dueDate?: string, dueTime?: string) {
+  createTodo(title: string, dueDate?: string, dueTime?: string, category = 'General') {
     return this.http
-      .post<{ todo: TodoItem }>('/api/todos', { title, dueDate, dueTime })
+      .post<{ todo: TodoItem }>('/api/todos', { title, dueDate, dueTime, category })
       .pipe(
         catchError(() => {
           const store = this.readStore();
           const todo: TodoItem = {
             id: this.makeId('todo'),
             title,
+            category,
             done: false,
             dueDate: dueDate ?? null,
             dueTime: dueTime ?? null,
@@ -303,7 +311,7 @@ export class FinesskinApiService {
       );
   }
 
-  updateTodo(id: string, patch: Partial<Pick<TodoItem, 'title' | 'done' | 'dueDate' | 'dueTime'>>) {
+  updateTodo(id: string, patch: Partial<Pick<TodoItem, 'title' | 'done' | 'dueDate' | 'dueTime' | 'category'>>) {
     return this.http
       .patch<{ todo: TodoItem }>(`/api/todos/${id}`, patch)
       .pipe(
@@ -418,6 +426,7 @@ export class FinesskinApiService {
 
     return {
       ...habit,
+      category: habit.category?.trim() || 'General',
       scheduleType,
       weekdays: Array.isArray(habit.weekdays)
         ? habit.weekdays.map(Number).filter((day) => Number.isInteger(day))

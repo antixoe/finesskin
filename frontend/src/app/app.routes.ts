@@ -6,13 +6,12 @@ import { AdminLayoutComponent } from './pages/admin-layout.component';
 import { AdminDashboardPageComponent } from './pages/admin-dashboard-page.component';
 import { AdminUsersComponent } from './pages/admin-users.component';
 import { AdminRolesComponent } from './pages/admin-roles.component';
-import { AdminRoutinesComponent } from './pages/admin-routines.component';
-import { AdminScansComponent } from './pages/admin-scans.component';
-import { AdminSettingsComponent } from './pages/admin-settings.component';
+import { AdminActivityComponent } from './pages/admin-activity.component';
 import { SettingsPageComponent } from './pages/settings-page.component';
 import { CameraRollPageComponent } from './pages/camera-roll-page.component';
 import { ReportsPageComponent } from './pages/reports-page.component';
 import { PomodoroPageComponent } from './pages/pomodoro-page.component';
+import { NotificationsPageComponent } from './pages/notifications-page.component';
 
 export const routes: Routes = [
   {
@@ -42,6 +41,7 @@ export const routes: Routes = [
   },
   { path: 'reports', component: ReportsPageComponent },
   { path: 'pomodoro', component: PomodoroPageComponent },
+  { path: 'notifications', component: NotificationsPageComponent },
   {
     path: 'dashboard',
     component: AdminLayoutComponent,
@@ -59,16 +59,8 @@ export const routes: Routes = [
         component: AdminRolesComponent,
       },
       {
-        path: 'routines',
-        component: AdminRoutinesComponent,
-      },
-      {
-        path: 'scans',
-        component: AdminScansComponent,
-      },
-      {
-        path: 'settings',
-        component: AdminSettingsComponent,
+        path: 'activity',
+        component: AdminActivityComponent,
       },
     ],
   },

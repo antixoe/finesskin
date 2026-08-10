@@ -6,9 +6,7 @@ export const ADMIN_PERMISSIONS = [
   "DASHBOARD",
   "USERS",
   "ROLES",
-  "ROUTINES",
-  "SCANS",
-  "SETTINGS",
+  "ACTIVITY",
 ] as const;
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
@@ -17,9 +15,7 @@ export const DEFAULT_ADMIN_PERMISSIONS: AdminPermission[] = [
   "DASHBOARD",
   "USERS",
   "ROLES",
-  "ROUTINES",
-  "SCANS",
-  "SETTINGS",
+  "ACTIVITY",
 ];
 
 export function parsePermissions(value: string | null | undefined): string[] {
@@ -52,7 +48,7 @@ export function serializePermissions(value: unknown): string {
 
 export async function requireAdmin(
   request: Request,
-  permission?: AdminPermission,
+  permission?: AdminPermission | string,
 ): Promise<AuthPayload | null> {
   const token = readBearerToken(request.headers.get("authorization"));
   const payload = token ? verifyToken(token) : null;
@@ -61,7 +57,16 @@ export async function requireAdmin(
     return null;
   }
 
-  if (!permission || payload.role === "SUPER_ADMIN") {
+  if (!permission) {
+    return payload;
+  }
+
+  // Removed admin permissions must stay blocked even for super admins.
+  if (!ADMIN_PERMISSIONS.includes(permission as AdminPermission)) {
+    return null;
+  }
+
+  if (permission === "ACTIVITY" || payload.role === "SUPER_ADMIN") {
     return payload;
   }
 
@@ -88,12 +93,18 @@ export async function requireSuperAdmin(request: Request): Promise<AuthPayload |
 
 export async function requireAnyAdmin(
   request: Request,
-  permissions: AdminPermission[],
+  permissions: Array<AdminPermission | string>,
 ): Promise<AuthPayload | null> {
   const token = readBearerToken(request.headers.get("authorization"));
   const payload = token ? verifyToken(token) : null;
 
   if (!payload || (payload.role !== "ADMIN" && payload.role !== "SUPER_ADMIN")) {
+    return null;
+  }
+
+  const allowedPermissions = permissions.filter((permission): permission is AdminPermission => ADMIN_PERMISSIONS.includes(permission as AdminPermission));
+
+  if (allowedPermissions.length === 0) {
     return null;
   }
 
@@ -108,7 +119,7 @@ export async function requireAnyAdmin(
 
   const granted = parsePermissions(user?.permissions);
 
-  return permissions.some((permission) => granted.includes(permission)) ? payload : null;
+  return allowedPermissions.some((permission) => granted.includes(permission)) ? payload : null;
 }
 
 export async function logActivity(

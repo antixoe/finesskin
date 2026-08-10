@@ -101,9 +101,6 @@ export async function PATCH(request: Request, { params }: Params) {
       avatarUrl: true,
       createdAt: true,
       updatedAt: true,
-      _count: {
-        select: { products: true, routines: true, scans: true },
-      },
     },
   });
 

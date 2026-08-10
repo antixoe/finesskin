@@ -1,5 +1,12 @@
 import prisma from "@/lib/prisma";
 import { DEMO_USER_EMAIL } from "@/lib/finesskin";
+import { readBearerToken, verifyToken } from "@/lib/auth";
+
+export function isAdminRequest(request: Request): boolean {
+  const token = readBearerToken(request.headers.get("authorization"));
+  const payload = token ? verifyToken(token) : null;
+  return payload?.role === "ADMIN" || payload?.role === "SUPER_ADMIN";
+}
 
 export async function getDemoUser() {
   return prisma.user.findUnique({

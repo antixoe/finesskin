@@ -1,4 +1,8 @@
 <div class="app-shell">
+  <div class="route-loading" [class.is-visible]="routeLoading()" role="status" aria-live="polite" aria-label="Loading page">
+    <span class="route-loading__bar"></span>
+    <div class="route-loading__card"><span class="route-loading__spinner" aria-hidden="true">✦</span><strong>Moving you there...</strong><small>Getting your care space ready</small></div>
+  </div>
   <header class="site-header-shell">
     <div class="site-header">
       <div class="site-header__inner">
@@ -13,6 +17,9 @@
               <a class="authenticated-nav-link" data-tooltip="Dashboard" aria-label="Dashboard" routerLink="/dashboard" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
                 <i class="bi bi-speedometer2" aria-hidden="true"></i><span class="nav-link-text">Dashboard</span>
               </a>
+              <a *ngIf="authService.hasPermission('USERS')" class="authenticated-nav-link" data-tooltip="Users" aria-label="Users" routerLink="/dashboard/users" routerLinkActive="is-active"><i class="bi bi-people-fill" aria-hidden="true"></i><span class="nav-link-text">Users</span></a>
+              <a *ngIf="authService.hasPermission('ROLES')" class="authenticated-nav-link" data-tooltip="Roles" aria-label="Roles" routerLink="/dashboard/roles" routerLinkActive="is-active"><i class="bi bi-shield-lock-fill" aria-hidden="true"></i><span class="nav-link-text">Roles</span></a>
+              <a *ngIf="authService.hasPermission('ACTIVITY')" class="authenticated-nav-link" data-tooltip="Activity" aria-label="Activity" routerLink="/dashboard/activity" routerLinkActive="is-active"><i class="bi bi-activity" aria-hidden="true"></i><span class="nav-link-text">Activity</span></a>
             </ng-container>
             <ng-template #customerNav>
               <a class="authenticated-nav-link" data-tooltip="My Dashboard" aria-label="My Dashboard" routerLink="/home" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
@@ -21,6 +28,7 @@
               <a class="authenticated-nav-link" data-tooltip="Settings" aria-label="Settings" routerLink="/settings" routerLinkActive="is-active"><i class="bi bi-gear-fill" aria-hidden="true"></i><span class="nav-link-text">Settings</span></a>
               <a class="authenticated-nav-link" data-tooltip="Camera Roll" aria-label="Camera Roll" routerLink="/camera-roll" routerLinkActive="is-active"><i class="bi bi-images" aria-hidden="true"></i><span class="nav-link-text">Camera Roll</span></a>
               <a class="authenticated-nav-link" data-tooltip="Reports" aria-label="Reports" routerLink="/reports" routerLinkActive="is-active"><i class="bi bi-bar-chart-line-fill" aria-hidden="true"></i><span class="nav-link-text">Reports</span></a>
+              <a class="authenticated-nav-link authenticated-nav-link--notifications" data-tooltip="Notifications" aria-label="Notifications" routerLink="/notifications" routerLinkActive="is-active"><i class="bi bi-bell-fill" aria-hidden="true"></i><span class="nav-link-text">Notifications</span><span class="nav-badge" *ngIf="reminderService.unreadCount()">{{ reminderService.unreadCount() > 9 ? '9+' : reminderService.unreadCount() }}</span></a>
               <a class="authenticated-nav-link" data-tooltip="Pomodoro" aria-label="Pomodoro" routerLink="/pomodoro" routerLinkActive="is-active"><i class="bi bi-stopwatch-fill" aria-hidden="true"></i><span class="nav-link-text">Pomodoro</span></a>
             </ng-template>
           </ng-container>
@@ -48,7 +56,7 @@
     </div>
   </header>
 
-  <main class="container app-main">
+  <main class="container app-main" [class.is-route-loading]="routeLoading()">
     <router-outlet />
   </main>
 

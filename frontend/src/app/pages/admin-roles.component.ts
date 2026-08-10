@@ -34,9 +34,7 @@ export class AdminRolesComponent implements OnInit {
     { value: 'DASHBOARD', label: 'Dashboard overview' },
     { value: 'USERS', label: 'Users management' },
     { value: 'ROLES', label: 'Roles management' },
-    { value: 'ROUTINES', label: 'Routines management' },
-    { value: 'SCANS', label: 'Scans management' },
-    { value: 'SETTINGS', label: 'Settings management' },
+    { value: 'ACTIVITY', label: 'Activity log access' },
   ];
 
   ngOnInit() {

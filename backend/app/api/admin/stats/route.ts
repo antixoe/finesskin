@@ -10,21 +10,19 @@ export async function GET(request: Request) {
     return Response.json({ error: "Admin access required." }, { status: 403 });
   }
 
-  const [users, products, routines, scans, completions] = await Promise.all([
+  const [users, admins, customers, activityLogs] = await Promise.all([
     prisma.user.count(),
-    prisma.product.count(),
-    prisma.routine.count(),
-    prisma.skinScan.count(),
-    prisma.routineCompletion.count(),
+    prisma.user.count({ where: { role: { in: ["ADMIN", "SUPER_ADMIN"] } } }),
+    prisma.user.count({ where: { role: "CUSTOMER" } }),
+    prisma.activityLog.count(),
   ]);
 
   return Response.json({
     stats: {
       users,
-      products,
-      routines,
-      scans,
-      completions,
+      admins,
+      customers,
+      activityLogs,
     },
   });
 }

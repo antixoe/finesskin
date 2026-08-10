@@ -1,9 +1,10 @@
-import { getDemoUser } from "@/lib/dashboard";
+import { getDemoUser, isAdminRequest } from "@/lib/dashboard";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (isAdminRequest(request)) return Response.json({ error: "Admin accounts cannot access customer to-dos." }, { status: 403 });
   const user = await getDemoUser();
 
   if (!user) {
@@ -19,6 +20,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (isAdminRequest(request)) return Response.json({ error: "Admin accounts cannot access customer to-dos." }, { status: 403 });
   const user = await getDemoUser();
 
   if (!user) {

@@ -157,9 +157,9 @@ export class AdminApiService {
 
   getActivityLogs() {
     return this.http
-      .get<AdminSettingsResponse>('/api/admin/settings', {
+      .get<{ activityLogs: ActivityLog[] }>('/api/admin/activity', {
         headers: this.headers(),
       })
-      .pipe(map((response) => response.activityLogs ?? [] as ActivityLog[]));
+      .pipe(map((response) => response.activityLogs ?? []));
   }
 }

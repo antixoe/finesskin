@@ -1,5 +1,5 @@
 export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'CUSTOMER';
-export type AdminPermission = 'DASHBOARD' | 'USERS' | 'ROLES' | 'ROUTINES' | 'SCANS' | 'SETTINGS';
+export type AdminPermission = 'DASHBOARD' | 'USERS' | 'ROLES' | 'ACTIVITY';
 
 export interface AuthUser {
   id: string;
@@ -17,10 +17,9 @@ export interface AuthResponse {
 
 export interface AdminStats {
   users: number;
-  products: number;
-  routines: number;
-  scans: number;
-  completions: number;
+  admins: number;
+  customers: number;
+  activityLogs: number;
 }
 
 export type RoutineTiming = 'AM' | 'PM';
@@ -109,6 +108,7 @@ export type HabitScheduleType = 'daily' | 'weekly' | 'dates';
 export interface Habit {
   id: string;
   title: string;
+  category: string;
   emoji: string;
   scheduleType: HabitScheduleType;
   weekdays: number[];
@@ -120,6 +120,7 @@ export interface Habit {
 
 export interface HabitPayload {
   title: string;
+  category: string;
   emoji: string;
   scheduleType: HabitScheduleType;
   weekdays: number[];
@@ -130,6 +131,7 @@ export interface HabitPayload {
 export interface TodoItem {
   id: string;
   title: string;
+  category?: string;
   done: boolean;
   dueDate?: string | null;
   dueTime?: string | null;
@@ -217,11 +219,6 @@ export interface AdminUser {
   avatarUrl: string | null;
   createdAt: string;
   updatedAt: string;
-  _count: {
-    products: number;
-    routines: number;
-    scans: number;
-  };
 }
 
 export interface AdminProduct extends Product {
