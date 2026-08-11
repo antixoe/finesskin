@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import type { AdminPermission, AdminStats, AuthResponse, AuthUser } from './finesskin.models';
 
 const SESSION_KEY = 'finesskin-session';
@@ -45,13 +46,13 @@ export class AuthService {
 
   signIn(email: string, password: string): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>('/api/auth/signin', { email, password })
+      .post<AuthResponse>(this.apiUrl('/auth/signin'), { email, password })
       .pipe(tap((response) => this.persistSession(response)));
   }
 
   signUp(name: string, email: string, password: string): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>('/api/auth/signup', { name, email, password })
+      .post<AuthResponse>(this.apiUrl('/auth/signup'), { name, email, password })
       .pipe(tap((response) => this.persistSession(response)));
   }
 
@@ -72,7 +73,7 @@ export class AuthService {
     }
 
     return this.http
-      .get<{ stats: AdminStats }>('/api/admin/stats', {
+      .get<{ stats: AdminStats }>(this.apiUrl('/admin/stats'), {
         headers: { Authorization: `Bearer ${token}` },
       })
       .pipe(map((response) => response.stats));
@@ -86,7 +87,7 @@ export class AuthService {
     }
 
     this.http
-      .get<{ user: AuthUser }>('/api/auth/me', {
+      .get<{ user: AuthUser }>(this.apiUrl('/auth/me'), {
         headers: { Authorization: `Bearer ${token}` },
       })
       .pipe(catchError((error) => error?.status === 401 ? of(null) : of({ user: this.userSignal() as AuthUser })))
@@ -107,6 +108,11 @@ export class AuthService {
 
     this.tokenSignal.set(response.token);
     this.userSignal.set(response.user);
+  }
+
+  private apiUrl(path: string): string {
+    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    return `${baseUrl}${path}`;
   }
 
   private restoreSession(): void {
