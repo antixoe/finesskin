@@ -4,6 +4,20 @@ export const dynamic = "force-dynamic";
 
 type FieMessage = { role: "user" | "model"; text: string };
 
+const FIE_SYSTEM_PROMPT = `You are Fie, a warm, thoughtful assistant for girls and women, while welcoming anyone who needs help.
+
+Your job is to give useful, respectful guidance about skincare, periods, body care, wellness, relationships, study, work, confidence, and everyday life.
+
+Follow these rules:
+- Be kind, non-judgmental, inclusive, and practical. Never shame someone for their body, choices, sexuality, appearance, or experience.
+- Give clear answers in plain language. Ask one short clarifying question when important context is missing.
+- Do not invent facts, statistics, product ingredients, diagnoses, or medical claims. If uncertain, say so and explain what should be checked.
+- Separate general information from personalized medical advice. For severe, sudden, persistent, or urgent symptoms, recommend a qualified healthcare professional; for emergencies, recommend local emergency services.
+- Do not diagnose skin, reproductive, mental-health, or other medical conditions. Offer low-risk general steps and explain when to seek care.
+- Respect privacy. Do not ask for identifying information, intimate photos, or unnecessary personal details.
+- For relationship or safety concerns, support the user without blaming them and encourage trusted people or professional help when appropriate.
+- Keep replies conversational and reasonably concise. Use short sections or bullets when helpful.`;
+
 function normalizeMessages(messages: FieMessage[]) {
   const normalized: FieMessage[] = [];
 
@@ -11,7 +25,6 @@ function normalizeMessages(messages: FieMessage[]) {
     const text = String(message.text ?? "").trim().slice(0, 2000);
     if (!text) continue;
 
-    // Fie's welcome message is local UI state, so Gemini must receive a user turn first.
     if (normalized.length === 0 && message.role === "model") continue;
 
     const previous = normalized.at(-1);
@@ -26,10 +39,8 @@ function normalizeMessages(messages: FieMessage[]) {
 }
 
 export async function POST(request: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return Response.json({ error: "Fie needs GEMINI_API_KEY in backend/.env.local." }, { status: 503 });
-  }
+  const ollamaUrl = (process.env.OLLAMA_URL || "http://localhost:11434").replace(/\/$/, "");
+  const model = process.env.OLLAMA_MODEL || "gemma3";
 
   let body: { messages?: FieMessage[] };
   try {
@@ -42,28 +53,36 @@ export async function POST(request: NextRequest) {
   if (!messages.some((message) => message.role === "user")) {
     return Response.json({ error: "Please send a message to Fie first." }, { status: 400 });
   }
-  const contents = messages.map((message) => ({ role: message.role, parts: [{ text: message.text }] }));
+
+  const conversation = messages.map((message) => ({
+    role: message.role === "model" ? "assistant" : "user",
+    content: message.text,
+  }));
 
   try {
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: "You are Fie, a warm, practical assistant for skincare routines, self-care, wellness, relationships, study, work, and everyday girl-life questions. Be concise, kind, inclusive, and never shame users. For medical or urgent concerns, recommend a qualified professional. Do not diagnose skin or health conditions." }] },
-        contents,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 700 },
+        model,
+        messages: [{ role: "system", content: FIE_SYSTEM_PROMPT }, ...conversation],
+        stream: false,
+        options: { temperature: 0.5, num_predict: 700 },
       }),
     });
 
-    const data = await response.json() as { error?: { message?: string }; candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+    const data = await response.json() as {
+      error?: string;
+      message?: { content?: string };
+    };
     if (!response.ok) {
-      const reason = data.error?.message?.replace(/\s+/g, " ").trim();
-      return Response.json({ error: reason ? `Gemini refused the request: ${reason}` : "Gemini could not answer right now." }, { status: 502 });
+      const reason = data.error?.replace(/\s+/g, " ").trim();
+      return Response.json({ error: reason ? `Fie could not answer: ${reason}` : "Fie could not answer right now." }, { status: 502 });
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? "").join("").trim();
-    return Response.json({ reply: reply || "I’m not sure how to answer that yet." });
+    const reply = data.message?.content?.trim();
+    return Response.json({ reply: reply || "I'm not sure how to answer that yet." });
   } catch {
-    return Response.json({ error: "Fie could not reach Gemini. Check the backend network connection." }, { status: 502 });
+    return Response.json({ error: "Fie could not reach Ollama. Start Ollama and make sure the selected model is installed." }, { status: 502 });
   }
 }

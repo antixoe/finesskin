@@ -44,7 +44,7 @@ export class App {
     this.fieBusy.set(true);
     this.http.post<{ reply: string }>('/api/ai/fie', { messages }).subscribe({
       next: (response) => this.fieMessages.update((current) => [...current, { role: 'model', text: response.reply }]),
-      error: (error) => this.fieMessages.update((current) => [...current, { role: 'model', text: error?.error?.error ?? 'I’m offline right now. Add GEMINI_API_KEY to the backend environment to wake me up.' }]),
+      error: (error) => this.fieMessages.update((current) => [...current, { role: 'model', text: error?.error?.error ?? 'Fie is offline right now. Please try again in a moment.' }]),
       complete: () => this.fieBusy.set(false),
     });
   }

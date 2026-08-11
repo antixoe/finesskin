@@ -23,11 +23,15 @@ npm run db:push
 npm run db:seed
 ```
 
-To enable Fie, create `backend/.env.local` and add a Gemini API key from Google AI Studio:
+To enable Fie for free, install Ollama and download a local model. Ollama serves its local API at `http://localhost:11434`.
 
 ```text
-GEMINI_API_KEY="your-key-here"
+# Optional: change the local model or API address.
+OLLAMA_MODEL="gemma3"
+OLLAMA_URL="http://localhost:11434"
 ```
+
+After installing Ollama, run `ollama pull gemma3` once. No API key is required.
 
 Restart the backend after changing the environment file. Keep this key server-side; do not put it in the frontend environment.
 
