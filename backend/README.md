@@ -23,6 +23,14 @@ npm run db:push
 npm run db:seed
 ```
 
+To enable Fie, create `backend/.env.local` and add a Gemini API key from Google AI Studio:
+
+```text
+GEMINI_API_KEY="your-key-here"
+```
+
+Restart the backend after changing the environment file. Keep this key server-side; do not put it in the frontend environment.
+
 4. Run the app:
 
 ```bash
